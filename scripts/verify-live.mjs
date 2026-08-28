@@ -43,10 +43,19 @@ for (const path of localFiles) {
 const root = await fetch(`${origin}/`, { cache: 'no-store' });
 assert.match(root.headers.get('cache-control') ?? '', /no-cache/);
 assert.match(root.headers.get('cache-control') ?? '', /no-store/);
+assert.match(root.headers.get('strict-transport-security') ?? '', /max-age=/);
 assert.match(root.headers.get('content-security-policy') ?? '', /default-src 'self'/);
 assert.match(root.headers.get('permissions-policy') ?? '', /camera=\(self\)/);
+assert.equal(root.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 assert.equal(root.headers.get('x-frame-options'), 'DENY');
 assert.equal(root.headers.get('x-content-type-options'), 'nosniff');
+
+const initialJavaScript = localFiles.filter((path) => /dist\/assets\/main-.*\.js$/.test(path));
+const initialStyles = localFiles.filter((path) => /dist\/assets\/main-.*\.css$/.test(path));
+assert.equal(initialJavaScript.length, 1);
+assert.equal(initialStyles.length, 1);
+assert.ok((await readFile(initialJavaScript[0])).byteLength <= 200_000, 'initial JavaScript exceeds 200 KB');
+assert.ok((await readFile(initialStyles[0])).byteLength <= 50_000, 'initial CSS exceeds 50 KB');
 
 const manifestResponse = await fetch(`${origin}/manifest.webmanifest`, { cache: 'no-store' });
 assert.match(manifestResponse.headers.get('content-type') ?? '', /^application\/manifest\+json/);

@@ -11,10 +11,29 @@ test('home is semantic, keyboard-ready, and free of console errors', async ({ pa
   await expect(page.getByRole('heading', { level: 1 })).toContainText('gesture');
   await expect(page.locator('img[alt]')).toHaveCount(1);
   const accessibility = await new AxeBuilder({ page }).analyze();
-  expect(accessibility.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+  expect(accessibility.violations).toEqual([]);
   await page.keyboard.press('Tab');
   await expect(page.locator('.skip-link')).toBeFocused();
   expect(errors).toEqual([]);
+});
+
+test('the free experience is same-origin and creates no license state', async ({ page, baseURL }) => {
+  const origins = new Set<string>();
+  page.on('request', (request) => origins.add(new URL(request.url()).origin));
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  expect([...origins]).toEqual([new URL(baseURL!).origin]);
+  expect(await page.evaluate(() => localStorage.getItem('sb_license:gesture-gameplay-calibrator'))).toBeNull();
+});
+
+test('the layout does not overflow and reduced motion is effectively instant', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const transitionSeconds = await page.locator('.primary-button').first().evaluate((element) => (
+    Number.parseFloat(getComputedStyle(element).transitionDuration)
+  ));
+  expect(transitionSeconds).toBeLessThanOrEqual(0.001);
 });
 
 test('setup explains a declined camera and offers a recovery path', async ({ page, context }) => {
@@ -65,8 +84,8 @@ test('rejects malformed imports without replacing the saved calibration', async 
   await expect(page.getByLabel('Experiment name')).toHaveValue('Keep this calibration');
 });
 
-test('records ten examples and completes a reliability replay', async ({ page, context }) => {
-  await context.grantPermissions(['camera'], { origin: 'http://127.0.0.1:4173' });
+test('records ten examples and completes a reliability replay', async ({ page, context, baseURL }) => {
+  await context.grantPermissions(['camera'], { origin: new URL(baseURL!).origin });
   await page.goto('/');
   await page.getByRole('button', { name: 'Allow camera & begin' }).click();
   await expect(page.getByRole('heading', { name: 'Hold: Hands up' })).toBeVisible();
@@ -84,8 +103,8 @@ test('records ten examples and completes a reliability replay', async ({ page, c
   await expect(page.getByRole('button', { name: 'Export JSON profile' })).toBeVisible();
 });
 
-test('persists and resumes setup, every partial capture, and checkpoint clearing', async ({ page, context }) => {
-  await context.grantPermissions(['camera'], { origin: 'http://127.0.0.1:4173' });
+test('persists and resumes setup, every partial capture, and checkpoint clearing', async ({ page, context, baseURL }) => {
+  await context.grantPermissions(['camera'], { origin: new URL(baseURL!).origin });
   await page.goto('/');
   await page.getByLabel('Experiment name').fill('Reload rehearsal');
   await page.getByLabel('Checkpoint 1 (required)').fill('Point left');
@@ -127,8 +146,8 @@ test('persists and resumes setup, every partial capture, and checkpoint clearing
   await expect(page.getByRole('button', { name: 'Record example 1' })).toBeVisible();
 });
 
-test('Space preserves the native action of the focused Clear button', async ({ page, context }) => {
-  await context.grantPermissions(['camera'], { origin: 'http://127.0.0.1:4173' });
+test('Space preserves the native action of the focused Clear button', async ({ page, context, baseURL }) => {
+  await context.grantPermissions(['camera'], { origin: new URL(baseURL!).origin });
   await page.goto('/');
   await page.getByRole('button', { name: 'Allow camera & begin' }).click();
   await expect.poll(() => page.locator('#camera').evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThanOrEqual(2);
@@ -196,4 +215,29 @@ test('previously visited app shell works offline', async ({ page, context }) => 
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('gesture');
   await expect(page.getByText('Offline — calibration still works')).toBeVisible();
+});
+
+test('an installed replacement worker announces the available update', async ({ page }) => {
+  await page.addInitScript(() => {
+    const worker = new EventTarget() as EventTarget & { state: string };
+    worker.state = 'installing';
+    const registration = new EventTarget() as EventTarget & { installing: typeof worker };
+    registration.installing = worker;
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        controller: {},
+        register: async () => {
+          window.setTimeout(() => {
+            registration.dispatchEvent(new Event('updatefound'));
+            worker.state = 'installed';
+            worker.dispatchEvent(new Event('statechange'));
+          }, 50);
+          return registration;
+        },
+      },
+    });
+  });
+  await page.goto('/');
+  await expect(page.getByText('A fresh notebook is ready. Reload to update.')).toBeVisible();
 });

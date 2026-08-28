@@ -34,6 +34,8 @@ works offline after its first successful load.
 npm test          # calibration unit tests
 npm run build     # reproducible production output in ./dist
 npm run test:e2e  # Chromium desktop/mobile, axe, camera, legal, offline
+npm run test:e2e:live # run the same browser matrix against production
+npm run test:live # verify deployed bytes, headers, icon, catalog, and checkout
 npm run preview   # inspect ./dist locally
 ```
 
