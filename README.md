@@ -35,7 +35,7 @@ npm test          # calibration unit tests
 npm run build     # reproducible production output in ./dist
 npm run test:e2e  # Chromium desktop/mobile, axe, camera, legal, offline
 npm run test:e2e:live # run the same browser matrix against production
-npm run test:live # verify deployed bytes, headers, icon, catalog, and checkout
+npm run test:live # verify deployed bytes, headers, icon, checkout, and billing API throttling
 npm run preview   # inspect ./dist locally
 ```
 
@@ -49,6 +49,11 @@ No payment provider is embedded. Production defaults to
 `https://api.sociobot.in/api/v1`; set `VITE_BILLING_BASE` at build time to use
 the pilot endpoint on staging. The product slug is used directly, with no
 hardcoded billing product ID.
+
+The production release gate also sends a 60-request invalid-license burst to
+the public Sociobot verification endpoint. At least one response must be
+`429 Too Many Requests` and every throttled response must include a positive
+`Retry-After`; run it alone with `npm run test:billing-rate-limit`.
 
 ## Privacy and limitations
 

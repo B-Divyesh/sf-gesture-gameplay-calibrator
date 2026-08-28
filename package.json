@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:live": "PLAYWRIGHT_BASE_URL=https://gesture-gameplay-calibrator.sociobot.in playwright test",
-    "test:live": "node scripts/verify-live.mjs"
+    "test:live": "node scripts/verify-live.mjs && node scripts/verify-billing-rate-limit.mjs",
+    "test:billing-rate-limit": "node scripts/verify-billing-rate-limit.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
