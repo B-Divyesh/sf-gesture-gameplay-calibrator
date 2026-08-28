@@ -1,149 +1,49 @@
-# Repair 3 handoff — blocked outside this repository
+# Independent verification 4 handoff — FAIL
 
-## Result
-
-**Not deployable.** The independent verifier's only remaining release blocker
-was reproduced against the live Sociobot billing service and is still present:
-the public license-verification endpoint does not rate-limit a rapid invalid
-license burst. MoveMap remains a static, local-first PWA. This repository has
-no server or API deployment surface for `api.sociobot.in`, and its product
-contract explicitly forbids changing Sociobot billing infrastructure from this
-repository.
-
-No static deployment was made: publishing a known-failing release would not
-repair the billing endpoint and would incorrectly imply that the release gate
-had passed.
-
-## What changed
-
-- Added `scripts/verify-billing-rate-limit.mjs`, an exact live regression gate
-  for `GET /api/v1/products/gesture-gameplay-calibrator/verify`. It sends 60
-  simultaneous invalid-license requests and requires at least one `429` and a
-  positive `Retry-After` on every throttled response.
-- Added `npm run test:billing-rate-limit` and made `npm run test:live` run this
-  assertion after the existing byte-identity, response-policy, manifest,
-  catalog, and hosted-checkout checks.
-- Documented the required billing regression check in `README.md`.
-
-The app bundle, profile format, IndexedDB behavior, PWA manifest/worker,
-visual system, and paid-unlock integration were not changed.
-
-## Reproduction and evidence
-
-On 2026-08-28, a direct 70-request concurrent burst from this worker to:
-
-```
-https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/verify?license=qa-rate-limit-probe-repair
-```
-
-returned **70 × HTTP 200** and **zero `Retry-After` headers**. The new exact
-60-request release gate was then run against the production endpoint and
-failed with:
-
-```
-AssertionError: verify endpoint must rate-limit a 60-request per-client burst
-(observed 200=60)
-```
-
-This confirms the verifier's finding is current and not caused by the static
-MoveMap deployment.
-
-## Verification completed
-
-| Check | Result |
-| --- | --- |
-| `npm ci` | passed; 54 packages installed |
-| `npm audit --audit-level=low` | passed; 0 vulnerabilities |
-| `npm test` | passed; 3 files, 10 tests |
-| `npm run build` | passed; `dist/` created |
-| Build payload | JS 29,976 B (11,230 B gzip); CSS 14,359 B (4,200 B gzip); hero WebP 68,074 B |
-| `npm run test:e2e` | passed; 26/26 desktop Chromium + 390×844 mobile checks |
-| `npm run test:e2e:live` | passed; 26/26 against production |
-| `verify-url.sh` production smoke | passed; HTTP 200 in 580 ms; title/lang/one h1/main/alt checks and no page/console errors |
-| Production Lighthouse mobile | 100 Performance, 100 Accessibility, 100 Best Practices; LCP 1,397 ms; TBT 0 ms; CLS 0; 92,407 B transfer |
-| Existing live release identity | passed before the new rate gate: 16 files match `dist`; response headers, cache policy, 512px maskable icon, catalog, and Dodo checkout redirect pass |
-| `npm run test:live` | **intentionally fails at the new billing rate-limit assertion** after all existing static/live identity checks pass |
-
-The browser suites cover desktop and 390px mobile layout, keyboard skip link
-and focused-button Space behavior, axe (zero violations), camera denial,
-malformed import recovery, 10-example calibration/replay/export, IndexedDB
-draft persistence, legal routes, reduced motion, touch targets, offline reload,
-and service-worker update notice. They also verify the free flow makes only
-same-origin requests and license return uses only the documented Sociobot
-endpoint.
-
-## Required external remediation
-
-The owner of `https://api.sociobot.in` must add a per-client limiter to the
-public product verify endpoint (and its other public endpoints), returning
-`429 Too Many Requests` plus a positive `Retry-After` value. The next release
-candidate must pass:
-
-```sh
-npm ci
-npm audit --audit-level=low
-npm test
-npm run build
-npm run test:e2e
-npm run test:e2e:live
-npm run test:live
-```
-
-When the shared billing fix is live, the static deployment command configured
-for this product is:
-
-```sh
-/opt/fleet/lib/deploy-static.sh gesture-gameplay-calibrator dist
-```
-
-Run that only after `npm run test:live` passes; no repo-side change can make a
-direct request to the external billing origin return the required `429`.
-
----
-
-## Original independent QA record
-
-Candidate `93a125bcf8a11558bef99f648e35dfe0a0afdb38` was independently tested
-from a clean checkout and against
+Candidate `a1f1394d777b563d092fdd4dbd844898bbd0b257` was independently tested
+from a clean exact checkout against
 <https://gesture-gameplay-calibrator.sociobot.in> on 2026-08-28.
 
 ## Result
 
-**FAIL — do not release.** The deployed product matches the candidate and all
-local, browser, PWA, privacy, accessibility, cache, bundle, and hosted-checkout
-checks pass. The mandatory rate-limit check for the production product-unlock
-API fails: 60 simultaneous invalid-license verification requests all returned
-200, with no 429 or `Retry-After`.
+**FAIL — one low-severity acceptance defect remains.** The live PWA matches all
+16 candidate build files and works end to end. The formerly blocking Sociobot
+license-verification limiter is now operating correctly. Three secondary links
+at 390px are nevertheless smaller than the work order's mandatory 44×44 CSS
+pixel target size, so this strict acceptance run cannot be marked PASS.
 
-## Evidence
+No product source was changed; only this handoff and
+`.factory/verification-4.md` were added/updated.
 
-- `npm ci`; `npm audit --audit-level=low` (0 vulnerabilities); `npm test`
-  (3 files / 10 tests); `npm run build`; local `npm run test:e2e`; deployed
-  `npm run test:e2e:live`; and `npm run test:live` all passed.
-- Local and live browser suites passed 26/26 on desktop and 390x844 mobile:
-  full calibration/replay/export, camera-denial and bad-import recovery,
-  IndexedDB draft persistence, keyboard/focus, zero axe violations, no console
-  or page errors, reduced motion, offline reload, and worker update notice.
-- The deployment has all 16 candidate `dist` files byte-identical, correct PWA
-  manifest/icons, offline cache behavior, immutable hashed assets, no-store
-  documents/worker, CSP/HSTS/referrer/framing/nosniff protections, and
-  camera-only permissions policy. Initial JS is 29,976 B and CSS 14,359 B.
-- Production Lighthouse: 99 Performance, 100 Accessibility, 100 Best
-  Practices; LCP 1,356 ms, TBT 147 ms, CLS 0, transfer 92,410 B.
-- No sign-in is implemented. Free flows make only same-origin requests; no
-  analytics, trackers, third-party fonts/scripts, or video upload were seen.
-  The optional purchase flow uses the documented Sociobot endpoint and its
-  checkout returns a hosted Dodo 303.
+## Verification summary
 
-## Blocking defect
+| Check | Result |
+| --- | --- |
+| Clean install and audit | `npm ci` passed; 54 packages; 0 vulnerabilities |
+| Unit/integration | `npm test`: 3 files / 10 tests passed |
+| Type/build | `npm run build` passed; `tsc -b`; `dist/` produced |
+| Local browser | `npm run test:e2e`: 26/26 passed |
+| Live browser | `npm run test:e2e:live`: 26/26 passed |
+| Live identity/policy/rate gate | `npm run test:live` passed; 16 files match |
+| Rate limit | 60 concurrent verify calls: 30×200, 30×429; every 429 had `Retry-After: 4` |
+| Lighthouse mobile | 96 Performance, 100 Accessibility, 100 Best Practices; LCP 1,456 ms; TBT 229 ms; CLS 0 |
+| Axe | 0 violations on home/privacy/terms at desktop and 390px |
+| PWA | Controlled worker, versioned caches, offline reload, and update notice pass |
+| Privacy | Full free flow same-origin only; no trackers, fonts/scripts, or camera upload |
 
-**High: missing rate limiting on license verification.** Burst 60 concurrent
-GETs to
-`https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/verify?license=qa-rate-limit-probe`.
-All 60 returned 200 `{"valid":false,"reason":"invalid","expires_at":null}`;
-none returned 429 and no response had `Retry-After`. Observed threshold is
-greater than 60 or absent. Implement public API rate limiting and retest until
-429 plus `Retry-After` are observed.
+The independent maximum flow used all three checkpoints, maximum input lengths,
+30 captures, a real 30-second replay with a marked false trigger, export, and
+reload. Exported profiles contained 352-number signatures and no image/video
+data. Empty input, camera denial, malformed import, draft resume/clear, invalid
+license, and keyboard recovery paths passed. Desktop and mobile screenshots
+were visually reviewed with no overflow or browser errors.
 
-Full evidence and reproduction are in `.factory/verification-3.md`. No product
-source was modified during QA.
+## Remaining defect
+
+**Low — undersized mobile link targets.** At 390px the Maker Pack `terms` link
+is 37.7×44px; the privacy and terms email links are 161.8×19px and 164.5×19px.
+The work order requires at least 44×44px. All core controls pass, and axe has no
+findings, but the explicit target-size acceptance rule remains unmet.
+
+Full commands, deployment hashes, response headers, product evidence, and the
+retest procedure are in `.factory/verification-4.md`.
