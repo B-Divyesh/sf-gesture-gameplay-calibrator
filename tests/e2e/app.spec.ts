@@ -31,6 +31,40 @@ test('setup explains a declined camera and offers a recovery path', async ({ pag
   await expect(page.getByRole('alert')).not.toBeEmpty();
 });
 
+test('rejects malformed imports without replacing the saved calibration', async ({ page }) => {
+  await page.goto('/');
+  const signature = Array.from({ length: 352 }, (_, index) => index / 1000);
+  const savedProfile = {
+    schema: 'movemap-profile/v1', id: 'saved-profile', name: 'Keep this calibration',
+    createdAt: '2026-08-28T00:00:00.000Z', updatedAt: '2026-08-28T00:01:00.000Z',
+    frame: { width: 24, height: 18, feature: 'sobel-edge-24x18' }, settings: { holdMs: 450, releaseThreshold: 0.58 },
+    checkpoints: [{ id: 'saved-checkpoint', name: 'Hands up', examples: Array.from({ length: 10 }, () => signature), centroid: signature, threshold: .5 }],
+  };
+  await page.evaluate(async (profile) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('movemap-local', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('profiles', 'readwrite');
+      transaction.objectStore('profiles').put(profile, 'current');
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  }, savedProfile);
+  await page.reload();
+  await expect(page.getByLabel('Experiment name')).toHaveValue('Keep this calibration');
+  await page.locator('#import-file').setInputFiles({
+    name: 'malformed.json', mimeType: 'application/json',
+    buffer: Buffer.from('{"schema":"movemap-profile/v1","checkpoints":[{}]}'),
+  });
+  await expect(page.getByRole('alert')).toContainText('not a valid MoveMap v1 profile');
+  await page.reload();
+  await expect(page.getByLabel('Experiment name')).toHaveValue('Keep this calibration');
+});
+
 test('records ten examples and completes a reliability replay', async ({ page, context }) => {
   await context.grantPermissions(['camera'], { origin: 'http://127.0.0.1:4173' });
   await page.goto('/');

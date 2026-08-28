@@ -1,8 +1,10 @@
 import './styles.css';
 import { classify, extractSignature, finishCheckpoint } from './calibration';
 import { captureLicenseFromUrl, checkoutUrl, removeLicense, storeLicense, verifyLicense, type LicenseState } from './license';
+import { isValidProfile } from './profile-validation';
 import { clearProfile, loadProfile, saveProfile } from './storage';
 import type { CalibrationProfile, Checkpoint, HistoryPoint, Signature, TestSummary } from './types';
+import heroUrl from '../assets/src/movemap-hero.webp';
 
 type Phase = 'idle' | 'capture' | 'ready' | 'testing' | 'results';
 
@@ -28,7 +30,6 @@ let cameraMessage = '';
 let license: LicenseState = { unlocked: false, checking: true, message: 'Checking license…' };
 let installPrompt: BeforeInstallPromptEvent | null = null;
 const processingCanvas = document.createElement('canvas');
-const heroUrl = '/assets/movemap-hero.webp';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -163,7 +164,7 @@ function makerPackSection(): string {
 
 function homePage(): string {
   return `${header()}<main id="main">
-    <section class="hero"><div class="hero-copy"><p class="eyebrow">A field notebook for webcam moves</p><h1>Will your gesture hold up in a real room?</h1><p class="lede">Teach the browser a pose, replay it under real conditions, and leave with a portable threshold profile—before you wire it into a game.</p><a class="primary-button button-link" href="#workbench">Calibrate a move</a><p class="hero-proof"><span>●</span> Camera frames never leave your device</p></div><figure class="hero-art"><picture><source type="image/webp" srcset="/assets/movemap-hero-640.webp 640w, ${heroUrl} 1152w" sizes="(max-width: 820px) 92vw, 52vw" /><img src="/assets/movemap-hero.jpg" width="1152" height="768" alt="An open graph-paper notebook with an abstract jointed paper figure and red checkpoint circles" fetchpriority="high" decoding="async" /></picture><figcaption>Observe → record → stress-test</figcaption></figure></section>
+    <section class="hero"><div class="hero-copy"><p class="eyebrow">A field notebook for webcam moves</p><h1>Will your gesture hold up in a real room?</h1><p class="lede">Teach the browser a pose, replay it under real conditions, and leave with a portable threshold profile—before you wire it into a game.</p><a class="primary-button button-link" href="#workbench">Calibrate a move</a><p class="hero-proof"><span>●</span> Camera frames never leave your device</p></div><figure class="hero-art"><img src="${heroUrl}" width="1152" height="768" alt="An open graph-paper notebook with an abstract jointed paper figure and red checkpoint circles" fetchpriority="high" decoding="async" /><figcaption>Observe → record → stress-test</figcaption></figure></section>
     ${phase === 'idle' ? setupCard() : calibrationCard()}
     ${methodSection()}${makerPackSection()}
   </main>${footer()}<div class="status-toast" id="status-toast" role="status" hidden></div><div class="offline-ribbon" id="offline-ribbon" ${navigator.onLine ? 'hidden' : ''}>Offline — calibration still works</div>`;
@@ -426,8 +427,8 @@ async function importProfile(event: Event): Promise<void> {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
   try {
-    const candidate = JSON.parse(await file.text()) as CalibrationProfile;
-    if (candidate.schema !== 'movemap-profile/v1' || !Array.isArray(candidate.checkpoints) || !candidate.checkpoints.length) throw new Error('invalid');
+    const candidate: unknown = JSON.parse(await file.text());
+    if (!isValidProfile(candidate)) throw new Error('invalid');
     profile = candidate;
     await saveProfile(profile);
     cameraMessage = 'Profile imported. Start the camera to replay it.';
@@ -495,7 +496,15 @@ async function registerServiceWorker(): Promise<void> {
 
 async function boot(): Promise<void> {
   if (location.pathname === '/' || location.pathname === '') {
-    try { profile = await loadProfile(); } catch { cameraMessage = 'Local saving is unavailable in this browser. You can still export your profile.'; }
+    try {
+      const savedProfile = await loadProfile();
+      if (savedProfile && !isValidProfile(savedProfile)) {
+        await clearProfile();
+        cameraMessage = 'An incomplete saved profile was removed. Import a valid export or start a new calibration.';
+      } else {
+        profile = savedProfile;
+      }
+    } catch { cameraMessage = 'Local saving is unavailable in this browser. You can still export your profile.'; }
   }
   render();
   license = await verifyLicense();

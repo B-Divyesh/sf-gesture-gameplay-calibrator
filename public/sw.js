@@ -1,7 +1,7 @@
-const VERSION = 'movemap-v1.0.1';
+const VERSION = 'movemap-v1.0.2';
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
-const SHELL_URLS = ['/', '/privacy/', '/terms/', '/offline.html', '/manifest.webmanifest', '/assets/movemap-hero-640.webp', '/assets/movemap-hero.webp', '/assets/movemap-hero.jpg', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
+const SHELL_URLS = ['/', '/privacy/', '/terms/', '/offline.html', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 async function precacheShell() {
   const cache = await caches.open(SHELL);
