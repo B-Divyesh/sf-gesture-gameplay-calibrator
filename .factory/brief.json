@@ -1,0 +1,11 @@
+{
+  "slug": "gesture-gameplay-calibrator",
+  "title": "MoveMap",
+  "territory": "games-creative",
+  "user": "Webcam-motion game makers and players who need to test whether a body gesture can be recognized reliably in a real room before mapping it to a game action.",
+  "smallest_useful_product": "Local browser app: define 1–3 pose checkpoints, collect 10 examples, show live confidence/history, and export a JSON threshold profile.",
+  "success_measure": "60% of sessions complete a calibration and replay a 30-second test without a false trigger reported by the user.",
+  "artifact_class": "pwa-offline",
+  "monetization": "one-time",
+  "constraints": "On-device camera processing only; clear consent indicator; accessibility warning that movement is optional; no biometric identity inference."
+}

@@ -1,0 +1,8 @@
+{
+  "model": "factory-image",
+  "generated_at": "2026-08-28",
+  "tool": "/opt/fleet/lib/gen-image.sh",
+  "use_case": "stylized-concept",
+  "prompt": "Use case: stylized-concept. Asset type: landscape landing-page editorial hero. Scene: top-down maker's desk with an open cream graph-paper field notebook. Subject: one abstract articulated human-shaped paper cutout made from simple navy geometric pieces, three tomato-red pencil checkpoint circles around a wrist, shoulder, and knee, a small unbranded metal binder clip, sparse measurement arrows and purely non-legible scribble marks. Style: tactile editorial still life, hand-cut paper collage and colored pencil, subtle real paper fibers, deliberately imperfect craft. Composition: landscape, notebook angled slightly, clear quiet paper area, all objects fully contained, no interface screenshot. Lighting: soft window light from upper left, gentle physical shadows. Palette: cream paper, blue-black ink, faded blue grid, tomato red, muted green. Constraints: no real people, no faces, no readable text, no logos, no brands, no screens, no glowing gradients, no plastic 3D render, no watermark, no extra limbs, no surveillance imagery.",
+  "review": "Accepted: abstract figure has coherent anatomy; three intended checkpoint rings; no brands, readable text artifacts, faces, logos, or watermarks. Source PNG retained for provenance; WebP derivative ships."
+}
