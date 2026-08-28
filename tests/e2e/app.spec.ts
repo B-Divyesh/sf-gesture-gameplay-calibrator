@@ -84,6 +84,74 @@ test('records ten examples and completes a reliability replay', async ({ page, c
   await expect(page.getByRole('button', { name: 'Export JSON profile' })).toBeVisible();
 });
 
+test('persists and resumes setup, every partial capture, and checkpoint clearing', async ({ page, context }) => {
+  await context.grantPermissions(['camera'], { origin: 'http://127.0.0.1:4173' });
+  await page.goto('/');
+  await page.getByLabel('Experiment name').fill('Reload rehearsal');
+  await page.getByLabel('Checkpoint 1 (required)').fill('Point left');
+  await page.getByLabel('Checkpoint 2 (optional)').fill('Point right');
+  await page.getByRole('button', { name: 'Allow camera & begin' }).click();
+  await expect.poll(() => page.locator('#camera').evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThanOrEqual(2);
+
+  for (let example = 1; example <= 3; example += 1) {
+    await page.getByRole('button', { name: `Record example ${example}` }).click();
+    await expect.poll(() => page.evaluate(async () => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open('movemap-local', 1);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      const count = await new Promise<number>((resolve, reject) => {
+        const request = database.transaction('profiles').objectStore('profiles').get('current');
+        request.onsuccess = () => resolve(request.result.checkpoints[0].examples.length as number);
+        request.onerror = () => reject(request.error);
+      });
+      database.close();
+      return count;
+    })).toBe(example);
+  }
+
+  await page.reload();
+  await expect(page.getByLabel('Experiment name')).toHaveValue('Reload rehearsal');
+  await expect(page.getByLabel('Checkpoint 1 (required)')).toHaveValue('Point left');
+  await expect(page.getByLabel('Checkpoint 2 (optional)')).toHaveValue('Point right');
+  await page.getByRole('button', { name: 'Resume in-progress calibration' }).click();
+  await expect(page.getByRole('button', { name: 'Record example 4' })).toBeVisible();
+  await page.getByRole('button', { name: 'Clear this checkpoint' }).click();
+  await expect(page.getByRole('button', { name: 'Record example 1' })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume in-progress calibration' }).click();
+  await expect(page.getByRole('button', { name: 'Record example 1' })).toBeVisible();
+});
+
+test('Space preserves the native action of the focused Clear button', async ({ page, context }) => {
+  await context.grantPermissions(['camera'], { origin: 'http://127.0.0.1:4173' });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Allow camera & begin' }).click();
+  await expect.poll(() => page.locator('#camera').evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThanOrEqual(2);
+  await page.getByRole('button', { name: 'Record example 1' }).click();
+  const clear = page.getByRole('button', { name: 'Clear this checkpoint' });
+  await clear.focus();
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('button', { name: 'Record example 1' })).toBeVisible();
+  await expect(clear).toBeDisabled();
+});
+
+test('navigation and legal links keep 44px touch targets', async ({ page }) => {
+  await page.goto('/');
+  for (const locator of [
+    page.locator('.brand'),
+    page.locator('.purchase-note a').first(),
+    page.locator('.purchase-note a').last(),
+    page.locator('footer nav a').first(),
+    page.locator('footer nav a').nth(1),
+    page.locator('footer nav a').last(),
+  ]) {
+    const box = await locator.boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
+});
+
 test('privacy and terms are direct, standalone routes', async ({ page }) => {
   await page.goto('/privacy/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Privacy');

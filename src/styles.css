@@ -49,7 +49,7 @@ img { display: block; max-width: 100%; }
   align-items: center;
   gap: 28px;
 }
-.brand { display: inline-flex; align-items: center; gap: 10px; margin-right: auto; font-family: var(--hand); font-size: 22px; font-weight: 700; text-decoration: none; }
+.brand { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; margin-right: auto; font-family: var(--hand); font-size: 22px; font-weight: 700; text-decoration: none; }
 .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid var(--ink); border-radius: 50% 46% 52% 43%; color: var(--red-deep); transform: rotate(-4deg); }
 .site-header nav, footer nav { display: flex; align-items: center; gap: 24px; }
 .site-header nav a, footer a { font-weight: 700; text-decoration-thickness: 1px; }
@@ -180,6 +180,7 @@ kbd { padding: 2px 7px; border: 1px solid var(--rule); border-radius: 3px; backg
 .license-status { min-height: 24px; color: var(--green) !important; font-weight: 700; }
 .active-license { display: inline-block; padding: 8px 12px; background: #cfe2d6; color: #174c3a; font-weight: 800; }
 .purchase-note { font-size: 13px; }
+.purchase-note a, footer nav a { display: inline-flex; min-height: 44px; align-items: center; }
 
 footer { width: min(1200px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0 calc(40px + env(safe-area-inset-bottom)); border-top: 2px solid var(--ink); display: grid; grid-template-columns: 1fr auto; gap: 12px 40px; align-items: start; }
 footer p { margin: 4px 0; color: var(--muted); }

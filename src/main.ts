@@ -1,7 +1,7 @@
 import './styles.css';
 import { classify, extractSignature, finishCheckpoint } from './calibration';
 import { captureLicenseFromUrl, checkoutUrl, removeLicense, storeLicense, verifyLicense, type LicenseState } from './license';
-import { isValidProfile } from './profile-validation';
+import { isValidProfile, isValidStoredProfile } from './profile-validation';
 import { clearProfile, loadProfile, saveProfile } from './storage';
 import type { CalibrationProfile, Checkpoint, HistoryPoint, Signature, TestSummary } from './types';
 import heroUrl from '../assets/src/movemap-hero.webp';
@@ -56,6 +56,22 @@ function makeProfile(name: string, checkpointNames: string[]): CalibrationProfil
   };
 }
 
+function isCalibrationComplete(candidate: CalibrationProfile): boolean {
+  return candidate.checkpoints.every((checkpoint) => checkpoint.examples.length === 10 && checkpoint.centroid !== undefined && checkpoint.threshold !== undefined);
+}
+
+async function persistProfile(): Promise<boolean> {
+  if (!profile) return false;
+  profile.updatedAt = new Date().toISOString();
+  try {
+    await saveProfile(profile);
+    return true;
+  } catch {
+    toast('This example could not be saved locally. Keep this tab open and export when finished.');
+    return false;
+  }
+}
+
 function header(): string {
   return `<header class="site-header">
     <a class="brand" href="/" aria-label="MoveMap home"><span class="brand-mark" aria-hidden="true">M</span><span>MoveMap</span></a>
@@ -99,7 +115,7 @@ function setupCard(): string {
       <div class="button-row"><button class="primary-button" type="submit">Allow camera & begin</button><button class="text-button" id="import-button" type="button">Import a profile</button><input id="import-file" type="file" accept="application/json,.json" hidden /></div>
       <p class="form-error" role="alert">${escapeHtml(cameraMessage)}</p>
     </form>
-    ${profile?.checkpoints.every((checkpoint) => checkpoint.centroid) ? `<div class="button-row saved-actions"><button type="button" id="resume-button" class="secondary-button">Resume saved calibration</button><button type="button" id="reset-profile" class="text-button">Reset notebook</button></div>` : ''}
+    ${profile ? `<div class="button-row saved-actions"><button type="button" id="resume-button" class="secondary-button">${isCalibrationComplete(profile) ? 'Resume saved calibration' : 'Resume in-progress calibration'}</button><button type="button" id="reset-profile" class="text-button">Reset notebook</button></div>` : ''}
   </section>`;
 }
 
@@ -203,9 +219,18 @@ function bindHome(): void {
   document.querySelector<HTMLInputElement>('#import-file')?.addEventListener('change', importProfile);
   document.querySelector<HTMLButtonElement>('#resume-button')?.addEventListener('click', async () => {
     if (!profile) return;
-    await startCamera();
-    phase = 'ready';
-    render();
+    try {
+      await startCamera();
+      captureIndex = profile.checkpoints.findIndex((checkpoint) => checkpoint.examples.length < 10);
+      phase = captureIndex < 0 ? 'ready' : 'capture';
+      if (captureIndex < 0) captureIndex = Math.max(0, profile.checkpoints.length - 1);
+      cameraMessage = '';
+      render();
+    } catch (error) {
+      cameraMessage = cameraErrorMessage(error);
+      render();
+      document.querySelector('#workbench')?.scrollIntoView({ behavior: 'smooth' });
+    }
   });
   document.querySelector<HTMLButtonElement>('#reset-profile')?.addEventListener('click', async () => {
     if (!confirm(`Delete “${profile?.name ?? 'this calibration'}” from this browser? Export it first if you want a copy.`)) return;
@@ -241,6 +266,7 @@ async function startSetup(event: SubmitEvent): Promise<void> {
   profile = makeProfile(name, names);
   captureIndex = 0;
   cameraMessage = '';
+  await persistProfile();
   try {
     await startCamera();
     phase = 'capture';
@@ -293,22 +319,22 @@ async function captureExample(): Promise<void> {
       captureIndex += 1;
       toast(`Checkpoint saved. Next: ${profile.checkpoints[captureIndex]?.name ?? ''}`);
     } else {
-      profile.updatedAt = new Date().toISOString();
-      await saveProfile(profile);
       phase = 'ready';
       toast('Calibration saved on this device. Ready for replay.');
     }
   }
+  await persistProfile();
   render();
 }
 
-function clearCurrentCheckpoint(): void {
+async function clearCurrentCheckpoint(): Promise<void> {
   if (!profile) return;
   const checkpoint = profile.checkpoints[captureIndex];
   if (!checkpoint) return;
   checkpoint.examples = [];
   delete checkpoint.centroid;
   delete checkpoint.threshold;
+  await persistProfile();
   toast(`Cleared examples for ${checkpoint.name}.`);
   render();
 }
@@ -477,7 +503,9 @@ window.addEventListener('beforeinstallprompt', (event) => {
   if (button) button.hidden = false;
 });
 window.addEventListener('keydown', (event) => {
-  if (event.code === 'Space' && phase === 'capture' && !(event.target instanceof HTMLInputElement)) {
+  const target = event.target;
+  const isInteractive = target instanceof Element && Boolean(target.closest('button, a, input, select, textarea, summary, [contenteditable="true"]'));
+  if (event.code === 'Space' && phase === 'capture' && !isInteractive) {
     event.preventDefault();
     captureExample();
   }
@@ -498,7 +526,7 @@ async function boot(): Promise<void> {
   if (location.pathname === '/' || location.pathname === '') {
     try {
       const savedProfile = await loadProfile();
-      if (savedProfile && !isValidProfile(savedProfile)) {
+      if (savedProfile && !isValidStoredProfile(savedProfile)) {
         await clearProfile();
         cameraMessage = 'An incomplete saved profile was removed. Import a valid export or start a new calibration.';
       } else {

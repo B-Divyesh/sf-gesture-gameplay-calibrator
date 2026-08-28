@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MoveMap M route mark">
-  <rect width="512" height="512" rx="104" fill="#f4efdf"/>
+  <rect width="512" height="512" fill="#f4efdf"/>
   <path d="M52 0v512M0 52h512M0 154h512M0 256h512M0 358h512M154 0v512M256 0v512M358 0v512M460 0v512" stroke="#b9c8ca" stroke-width="3" opacity=".45"/>
-  <path d="M118 374V142l138 126 138-126v232" fill="none" stroke="#162a43" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="118" cy="374" r="30" fill="#b83a31" stroke="#162a43" stroke-width="10"/>
+  <path d="M132 366V146l124 122 124-122v220" fill="none" stroke="#162a43" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="132" cy="366" r="30" fill="#b83a31" stroke="#162a43" stroke-width="10"/>
   <circle cx="256" cy="268" r="24" fill="#fffaf0" stroke="#b83a31" stroke-width="10"/>
-  <circle cx="394" cy="142" r="30" fill="#b83a31" stroke="#162a43" stroke-width="10"/>
+  <circle cx="380" cy="146" r="30" fill="#b83a31" stroke="#162a43" stroke-width="10"/>
 </svg>

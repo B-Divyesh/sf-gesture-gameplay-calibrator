@@ -30,15 +30,26 @@ function isSignature(value: unknown): value is Signature {
     && value.every((entry) => isFiniteNumber(entry));
 }
 
-function isCheckpoint(value: unknown): value is Checkpoint {
+function isCheckpointBase(value: unknown): value is UnknownRecord & Pick<Checkpoint, 'id' | 'name' | 'examples'> {
   if (!isRecord(value)) return false;
   return isNonEmptyString(value.id, 128)
     && isNonEmptyString(value.name, 32)
     && Array.isArray(value.examples)
+    && value.examples.length <= 10
+    && value.examples.every(isSignature);
+}
+
+function isCompleteCheckpoint(value: unknown): value is Checkpoint {
+  return isCheckpointBase(value)
     && value.examples.length === 10
-    && value.examples.every(isSignature)
     && isSignature(value.centroid)
     && isFiniteNumber(value.threshold, 0.36, 1.7);
+}
+
+function isStoredCheckpoint(value: unknown): value is Checkpoint {
+  if (!isCheckpointBase(value)) return false;
+  if (value.examples.length === 10) return isCompleteCheckpoint(value);
+  return value.centroid === undefined && value.threshold === undefined;
 }
 
 function isTestSummary(value: unknown): value is TestSummary {
@@ -55,7 +66,7 @@ function isTestSummary(value: unknown): value is TestSummary {
  * Accept only complete profiles that this version can safely replay. Imports
  * are untrusted user files, so shape checks happen before IndexedDB is touched.
  */
-export function isValidProfile(value: unknown): value is CalibrationProfile {
+function hasValidProfileEnvelope(value: unknown): value is UnknownRecord {
   if (!isRecord(value) || value.schema !== 'movemap-profile/v1') return false;
   if (!isNonEmptyString(value.id, 128) || !isNonEmptyString(value.name, 48)) return false;
   if (!isDateString(value.createdAt) || !isDateString(value.updatedAt)) return false;
@@ -68,7 +79,23 @@ export function isValidProfile(value: unknown): value is CalibrationProfile {
     || !isFiniteNumber(value.settings.releaseThreshold, 0, 1)) return false;
   if (!Array.isArray(value.checkpoints)
     || value.checkpoints.length < 1
-    || value.checkpoints.length > 3
-    || !value.checkpoints.every(isCheckpoint)) return false;
+    || value.checkpoints.length > 3) return false;
   return value.lastTest === undefined || isTestSummary(value.lastTest);
+}
+
+/** Accept only complete profiles for untrusted imports and reliability replay. */
+export function isValidProfile(value: unknown): value is CalibrationProfile {
+  if (!hasValidProfileEnvelope(value)) return false;
+  return (value.checkpoints as unknown[]).every(isCompleteCheckpoint);
+}
+
+/** Accept a locally saved, sequential calibration draft without weakening imports. */
+export function isValidStoredProfile(value: unknown): value is CalibrationProfile {
+  if (!hasValidProfileEnvelope(value)) return false;
+  const checkpoints = value.checkpoints as unknown[];
+  if (!checkpoints.every(isStoredCheckpoint)) return false;
+  const storedCheckpoints = checkpoints as Checkpoint[];
+  const firstIncomplete = storedCheckpoints.findIndex((checkpoint) => checkpoint.examples.length < 10);
+  return firstIncomplete < 0
+    || storedCheckpoints.slice(firstIncomplete + 1).every((checkpoint) => checkpoint.examples.length === 0);
 }

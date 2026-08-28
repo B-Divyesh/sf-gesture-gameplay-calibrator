@@ -1,4 +1,4 @@
-const VERSION = 'movemap-v1.0.2';
+const VERSION = 'movemap-v1.0.3';
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
 const SHELL_URLS = ['/', '/privacy/', '/terms/', '/offline.html', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
