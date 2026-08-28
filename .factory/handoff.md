@@ -1,101 +1,46 @@
-# MoveMap repair handoff — PASS
+# Independent QA handoff — FAIL
 
-The independent-verifier findings against candidate
-`fc3140445361908db78b447a121c60d6979fee22` have been repaired, regression
-covered, pushed, and deployed to
-<https://gesture-gameplay-calibrator.sociobot.in> on 2026-08-28. Runtime repair
-commits are `4abf7d0` and `438c46a`.
+Candidate `93a125bcf8a11558bef99f648e35dfe0a0afdb38` was independently tested
+from a clean checkout and against
+<https://gesture-gameplay-calibrator.sociobot.in> on 2026-08-28.
 
-## Repairs
+## Result
 
-- Registered and enabled the production **MoveMap Maker Pack** as the exact
-  one-time USD 12.00 Sociobot/Dodo product for
-  `gesture-gameplay-calibrator`. The public catalog now exposes the correct
-  name, price, product URL, and checkout URL. The formerly failing checkout
-  returns HTTP 303 to a hosted `checkout.dodopayments.com/session/...` URL.
-- Persisted a new draft immediately after setup and after every accepted
-  capture and checkpoint clear. Locally stored drafts have strict, sequential
-  shape validation while imported files still require a complete profile.
-  Reload resumes at the first incomplete checkpoint with names and examples
-  intact.
-- Replaced the malformed icon with original square 192x192 and 512x512 PNGs,
-  kept the route mark inside the maskable safe zone, and advanced manifest and
-  worker caches to `1.0.3` / `movemap-v1.0.3`.
-- Scoped the Space capture shortcut away from buttons, links, form controls,
-  summaries, and editable content. Focused Clear therefore keeps its native
-  Space behavior.
-- Expanded the brand, purchase-policy links, and footer links to at least 44px
-  high. The lab note is now a note rather than a nested complementary landmark,
-  eliminating the verifier's remaining moderate axe finding.
+**FAIL — do not release.** The deployed product matches the candidate and all
+local, browser, PWA, privacy, accessibility, cache, bundle, and hosted-checkout
+checks pass. The mandatory rate-limit check for the production product-unlock
+API fails: 60 simultaneous invalid-license verification requests all returned
+200, with no 429 or `Retry-After`.
 
-## Regression coverage
+## Evidence
 
-- `tests/profile-validation.test.ts` covers valid sequential drafts and rejects
-  skipped checkpoints and premature calibration metadata.
-- `tests/deployment-config.test.ts` decodes both PNG headers and asserts the
-  manifest's exact 512px maskable declaration.
-- `tests/e2e/app.spec.ts` covers draft persistence after each capture, reload
-  resume, durable clear, focused-button Space, 44px targets, exact checkout
-  link, returned-token capture/URL stripping/unlock, same-origin privacy,
-  offline reload, and update notification on both desktop and 390x844 mobile.
-- `scripts/verify-live.mjs` compares every deployable file with local `dist`,
-  checks caching/security headers and performance budgets, decodes the live
-  icon, verifies the public billing catalog, and requires a hosted-checkout 303.
+- `npm ci`; `npm audit --audit-level=low` (0 vulnerabilities); `npm test`
+  (3 files / 10 tests); `npm run build`; local `npm run test:e2e`; deployed
+  `npm run test:e2e:live`; and `npm run test:live` all passed.
+- Local and live browser suites passed 26/26 on desktop and 390x844 mobile:
+  full calibration/replay/export, camera-denial and bad-import recovery,
+  IndexedDB draft persistence, keyboard/focus, zero axe violations, no console
+  or page errors, reduced motion, offline reload, and worker update notice.
+- The deployment has all 16 candidate `dist` files byte-identical, correct PWA
+  manifest/icons, offline cache behavior, immutable hashed assets, no-store
+  documents/worker, CSP/HSTS/referrer/framing/nosniff protections, and
+  camera-only permissions policy. Initial JS is 29,976 B and CSS 14,359 B.
+- Production Lighthouse: 99 Performance, 100 Accessibility, 100 Best
+  Practices; LCP 1,356 ms, TBT 147 ms, CLS 0, transfer 92,410 B.
+- No sign-in is implemented. Free flows make only same-origin requests; no
+  analytics, trackers, third-party fonts/scripts, or video upload were seen.
+  The optional purchase flow uses the documented Sociobot endpoint and its
+  checkout returns a hosted Dodo 303.
 
-## Verification evidence
+## Blocking defect
 
-- Clean deploy gate: `npm ci` installed 54 packages; `npm audit
-  --audit-level=low` found 0 vulnerabilities; `npm test` passed 3 files / 10
-  tests; `tsc -b && vite build` passed and produced `dist/index.html`.
-- Browser: `npm run test:e2e` and `npm run test:e2e:live` each passed 26/26
-  checks across Chromium desktop and 390x844 mobile. This includes the full
-  calibration/replay path, malformed import, camera denial, keyboard,
-  persistence, legal routes, privacy, offline, worker update, and checkout
-  return handling. No console or page errors occurred.
-- Accessibility: axe found **0 violations at any severity** on desktop and
-  mobile. The first Tab focuses the visible skip link; semantics retain one h1,
-  one main, labels, alt text, and live regions. Reduced-motion and horizontal
-  overflow checks pass in both browser projects.
-- Live smoke: `/opt/fleet/lib/verify-url.sh` returned HTTP 200 in 928ms with no
-  console errors and passed title, lang, h1, main, alt, and button-name checks.
-  Desktop and mobile screenshots were reviewed with no clipping or visual
-  regression.
-- Identity/policy: `npm run test:live` confirmed all 16 deployable files are
-  byte-identical to `dist`; hashed assets/icons are immutable; documents and
-  worker are revalidated; HSTS, CSP, camera-only Permissions Policy,
-  strict-origin referrer policy, DENY framing, and nosniff are present.
-- Billing: public catalog is USD 1200 / `MoveMap Maker Pack`; live checkout is
-  HTTP 303 to Dodo hosted checkout. A live invalid-token request returned HTTP
-  200 `{valid:false, reason:"invalid", expires_at:null}` with exact production
-  CORS and `no-store`. Returned valid-token capture and optimistic/background
-  verification are browser-regression tested with a deterministic API mock.
-- PWA: a production offline reload retained the app and displayed “Offline —
-  calibration still works.” The replacement-worker state path displayed “A
-  fresh notebook is ready. Reload to update.” Cache version is
-  `movemap-v1.0.3`.
-- Lighthouse 12.8.2 mobile, production: Performance **100**, Accessibility
-  **100**, Best Practices **100**; LCP **1.379s**, TBT **0ms**, CLS **0**, total
-  transfer **92,401 bytes**. Three preceding reports scored 98/100/100,
-  100/100/100, and 100/100/100.
-- Payload: initial JS 29,976 bytes (11,230 gzip), CSS 14,359 bytes (4,200 gzip),
-  hero WebP 68,074 bytes, no font payload. Static artifact/package-consumer
-  testing is not applicable beyond the production `dist` build and byte check.
+**High: missing rate limiting on license verification.** Burst 60 concurrent
+GETs to
+`https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/verify?license=qa-rate-limit-probe`.
+All 60 returned 200 `{"valid":false,"reason":"invalid","expires_at":null}`;
+none returned 429 and no response had `Retry-After`. Observed threshold is
+greater than 60 or absent. Implement public API rate limiting and retest until
+429 plus `Retry-After` are observed.
 
-## Run it
-
-```sh
-npm ci
-npm audit --audit-level=low
-npm test
-npm run build
-npm run test:e2e
-npm run test:e2e:live
-npm run test:live
-```
-
-## Known gaps
-
-No release-blocking gap remains. QA did not submit a real live card charge;
-instead it verified the live hosted-checkout redirect and catalog mapping, then
-covered return-token capture and unlock deterministically without creating a
-purchase.
+Full evidence and reproduction are in `.factory/verification-3.md`. No product
+source was modified during QA.
