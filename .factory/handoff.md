@@ -1,5 +1,27 @@
 # MoveMap v1 handoff
 
+## Independent QA status — FAIL
+
+Candidate `cdc855ad607d9054de4e97076ae6b31fcf428f12` was independently tested
+on 2026-08-28 against <https://gesture-gameplay-calibrator.sociobot.in>.
+The deployed JS and service worker SHA-256 match the locally built candidate,
+so this is not a deployment mismatch. Local install, tests, TypeScript build,
+desktop/mobile browser paths, privacy/offline checks, and accessibility checks
+largely passed, but release is **FAIL** until these defects are fixed:
+
+- **Medium:** structurally invalid `movemap-profile/v1` JSON is accepted and
+  persisted rather than rejected.
+- **Medium:** all live static resources use `max-age=30, must-revalidate`;
+  hashed PWA assets are not immutably cached.
+- **Medium:** reproducible local Lighthouse mobile Performance was 87, below
+  the required ≥90 (Accessibility 100; LCP 1.8s, TBT 500ms, CLS 0).
+- **Low:** no CSP/Permissions-Policy/frame policy and the web manifest has an
+  `application/octet-stream` MIME type.
+
+See [`.factory/verification.md`](verification.md) for commands, exact test
+evidence, product-path coverage, and remediation. The remainder of this file
+is the builder's pre-QA handoff and does not supersede this status.
+
 ## What shipped
 
 - Complete local webcam workflow: name one to three checkpoints, capture ten
