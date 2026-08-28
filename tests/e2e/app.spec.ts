@@ -94,6 +94,9 @@ test('persists and resumes setup, every partial capture, and checkpoint clearing
   await expect.poll(() => page.locator('#camera').evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThanOrEqual(2);
 
   for (let example = 1; example <= 3; example += 1) {
+    // Each committed capture re-renders the workbench and reattaches the
+    // existing stream, so wait for the new video element to have a frame.
+    await expect.poll(() => page.locator('#camera').evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThanOrEqual(2);
     await page.getByRole('button', { name: `Record example ${example}` }).click();
     await expect.poll(() => page.evaluate(async () => {
       const database = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -150,6 +153,27 @@ test('navigation and legal links keep 44px touch targets', async ({ page }) => {
     const box = await locator.boundingBox();
     expect(box?.height).toBeGreaterThanOrEqual(44);
   }
+});
+
+test('checkout and returned licenses use only the registered Sociobot product', async ({ page }) => {
+  const token = 'signed-license-regression-token';
+  await page.route('https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/verify?license=*', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ valid: true, reason: 'ok', expires_at: null }) });
+  });
+  await page.goto(`/?license=${token}#maker-pack`);
+  await expect(page).not.toHaveURL(/license=/);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('sb_license:gesture-gameplay-calibrator'))).toBe(token);
+  await expect(page.getByText('Maker Pack is active on this device')).toBeVisible();
+
+  await page.evaluate(() => {
+    localStorage.removeItem('sb_license:gesture-gameplay-calibrator');
+    localStorage.removeItem('sb_license:gesture-gameplay-calibrator:verdict');
+  });
+  await page.reload();
+  await expect(page.getByRole('link', { name: 'Buy Maker Pack' })).toHaveAttribute(
+    'href',
+    'https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/checkout',
+  );
 });
 
 test('privacy and terms are direct, standalone routes', async ({ page }) => {

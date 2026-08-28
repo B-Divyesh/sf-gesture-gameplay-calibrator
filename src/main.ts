@@ -170,7 +170,7 @@ function resultsPanel(): string {
 function methodSection(): string {
   return `<section class="method-section" id="method" aria-labelledby="method-title"><div class="section-heading"><span class="scribble-number" aria-hidden="true">?</span><div><p class="eyebrow">What the score means</p><h2 id="method-title">A measurement, not magic</h2></div></div>
   <div class="method-grid"><article><span>01</span><h3>Learn the outline</h3><p>MoveMap downsamples each frame and records normalized edge patterns—not a photo, face, or identity.</p></article><article><span>02</span><h3>Find the variation</h3><p>Ten examples reveal how much your natural pose changes. That spread sets the checkpoint threshold.</p></article><article><span>03</span><h3>Stress the room</h3><p>The replay shows live confidence. Change distance or light and mark any false trigger you observe.</p></article></div>
-  <aside class="limitations"><strong>Lab note:</strong> This lightweight visual fingerprint works best with a fixed camera and stable background. It is deliberately sensitive to real-room changes. Exported profiles are a calibration reference for your game logic, not a universal pose model.</aside></section>`;
+  <aside class="limitations" role="note"><strong>Lab note:</strong> This lightweight visual fingerprint works best with a fixed camera and stable background. It is deliberately sensitive to real-room changes. Exported profiles are a calibration reference for your game logic, not a universal pose model.</aside></section>`;
 }
 
 function makerPackSection(): string {
