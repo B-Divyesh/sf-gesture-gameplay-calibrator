@@ -100,6 +100,9 @@ Verification on 2026-08-28:
 - `/opt/fleet/lib/verify-url.sh` against the live production URL passed title,
   lang, main, image-alt, button-label, console, and desktop/mobile screenshot
   checks. Response headers/MIME and artifact identity are recorded above.
+- Live 390px Chromium exercised the deployed service worker: after becoming
+  controlled, an offline reload kept the MoveMap h1 and offline ribbon visible
+  with no console/page errors.
 
 ## Known gaps and next steps
 
