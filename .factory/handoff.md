@@ -66,10 +66,32 @@ and billing throttling behavior were preserved.
 
 ## Deployment and live evidence
 
-Pending the repair commit and production upload. This section will be replaced
-with the deployed commit, byte-identity, live browser, response-policy, billing,
-offline, and Lighthouse results before final handoff.
+- Repair commits `e087608` and `3451f91` were pushed to `origin/main`.
+  `git ls-remote` matched local HEAD
+  `3451f91188e48034e775e57de48f426ab1752c34` before this evidence-only update.
+- `/opt/fleet/lib/deploy-static.sh gesture-gameplay-calibrator dist` deployed
+  successfully to the existing Azure Static Web App in `eastus2`. Azure
+  deployment ID: `a2776cd0-219a-484f-844d-00a963310870`. The custom domain
+  reported `Ready` and HTTPS returned 200.
+- `npm run test:live` passed. All 22 deployable files matched `dist` by SHA-256;
+  the manifest icon was valid; checkout returned the hosted merchant redirect;
+  `/demo` returned its own document; unknown routes returned HTTP 404 with the
+  designed page; canonical/robots/sitemap and security headers passed.
+- The live billing burst enforced its allowance: 31 of 60 requests returned
+  HTTP 429 and every throttled response included a positive `Retry-After`.
+- `npm run test:e2e:live` — 50/50 passed against
+  <https://gesture-gameplay-calibrator.sociobot.in>, including desktop, 390px,
+  axe, keyboard, camera, privacy, isolated demo storage, offline reload, update
+  notice, purchase return, and every claim.
+- Live `/opt/fleet/lib/verify-url.sh` passed in 847 ms with no console or page
+  errors and the required title, language, one h1, main, alt, and button labels.
+- Live Lighthouse 12.8.2 mobile — Performance 100, Accessibility 100, Best
+  Practices 100, SEO 100; LCP 1.4 s, TBT 0 ms, CLS 0, Speed Index 0.9 s.
+- Rendered-link crawl passed five non-fragment HTTP links, including the four
+  public product routes and GitHub source. Mail links were exempt; checkout was
+  verified separately by the response-policy script.
 
 ## Known gaps and next steps
 
-No product-code gap is known. Production evidence is the only remaining step.
+No known release-blocking gap remains. No package/consumer or authenticated
+identity test applies to this static, account-free PWA.
