@@ -53,6 +53,25 @@ img { display: block; max-width: 100%; }
 .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid var(--ink); border-radius: 50% 46% 52% 43%; color: var(--red-deep); transform: rotate(-4deg); }
 .site-header nav, footer nav { display: flex; align-items: center; gap: 24px; }
 .site-header nav a, footer a { font-weight: 700; text-decoration-thickness: 1px; }
+.site-header nav a { display: inline-flex; min-height: 44px; align-items: center; }
+
+.demo-banner {
+  position: sticky;
+  z-index: 60;
+  top: 0;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 6px max(16px, env(safe-area-inset-left));
+  border-bottom: 2px solid var(--ink);
+  background: #f7ecd4;
+  box-shadow: 0 3px 0 rgb(22 42 67 / 12%);
+}
+.demo-banner > div { display: flex; align-items: center; gap: 12px; }
+.demo-banner span { color: var(--muted); font-size: 13px; }
+.banner-button, .banner-link { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; padding: 6px 10px; border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 
 main { overflow: hidden; }
 .hero {
@@ -70,8 +89,10 @@ h1 { margin: 0; max-width: 12ch; font-size: clamp(42px, 5.2vw, 68px); line-heigh
 h2 { margin: 0; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.08; letter-spacing: -.025em; }
 h3 { margin: 0; font-size: 21px; line-height: 1.2; }
 .lede { max-width: 62ch; margin: 24px 0 28px; color: #334961; font-size: 19px; line-height: 1.58; }
-.hero-proof { margin: 18px 0 0; color: var(--muted); font-size: 14px; font-weight: 650; }
-.hero-proof span { color: var(--green); }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.hero-actions > span { flex-basis: 100%; color: var(--muted); font-size: 14px; }
+.hero-facts { display: grid; gap: 7px; margin: 24px 0 0; padding: 18px 0 0; border-top: 1px solid var(--rule); list-style: none; color: var(--muted); font-size: 14px; }
+.hero-facts strong { color: var(--ink); }
 .hero-art { position: relative; margin: 0; transform: rotate(1.4deg); }
 .hero-art::before { content: ""; position: absolute; inset: 18px -14px -16px 15px; z-index: -1; border: 2px solid var(--ink); background: var(--red); transform: rotate(-3deg); }
 .hero-art img { width: 100%; aspect-ratio: 3 / 2; border: 2px solid var(--ink); object-fit: cover; box-shadow: var(--shadow); }
@@ -121,6 +142,14 @@ fieldset { margin: 0 0 24px; padding: 0; border: 0; }
 .camera-frame video { display: block; width: 100%; height: 100%; min-height: 380px; object-fit: cover; transform: scaleX(-1); }
 .camera-badge { position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 7px; padding: 6px 10px; border-radius: 4px; background: rgb(15 30 46 / 88%); color: white; font-size: 13px; font-weight: 700; }
 .record-dot { width: 9px; height: 9px; border-radius: 50%; background: #f06b5f; }
+.sample-preview { display: grid; min-height: 380px; place-items: center; align-content: center; gap: 28px; padding: 36px; background-color: #e4eadf; background-image: linear-gradient(rgb(91 129 137 / 15%) 1px, transparent 1px), linear-gradient(90deg, rgb(91 129 137 / 15%) 1px, transparent 1px); background-size: 24px 24px; text-align: center; }
+.sample-preview strong { font-family: var(--hand); font-size: 24px; }
+.sample-preview p { margin: 4px 0 0; color: var(--muted); }
+.sample-person { position: relative; display: block; width: 150px; height: 150px; border: 3px solid var(--red); border-radius: 50% 46% 54% 44%; transform: rotate(-4deg); }
+.sample-person::before { content: ""; position: absolute; top: 25px; left: 55px; width: 34px; height: 34px; border: 5px solid var(--ink); border-radius: 50%; background: var(--sheet); }
+.sample-person i { position: absolute; top: 67px; left: 68px; width: 6px; height: 56px; background: var(--ink); transform: rotate(5deg); }
+.sample-person b::before, .sample-person b::after { content: ""; position: absolute; top: 75px; left: 36px; width: 78px; height: 6px; background: var(--ink); }
+.sample-person b::after { top: 118px; left: 49px; width: 52px; transform: rotate(-28deg); }
 .frame-guide span { position: absolute; width: 44px; height: 44px; border-color: rgb(255 250 240 / 72%); border-style: solid; }
 .frame-guide span:nth-child(1) { top: 16%; left: 16%; border-width: 2px 0 0 2px; }
 .frame-guide span:nth-child(2) { top: 16%; right: 16%; border-width: 2px 2px 0 0; }
@@ -186,6 +215,7 @@ kbd { padding: 2px 7px; border: 1px solid var(--rule); border-radius: 3px; backg
 footer { width: min(1200px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0 calc(40px + env(safe-area-inset-bottom)); border-top: 2px solid var(--ink); display: grid; grid-template-columns: 1fr auto; gap: 12px 40px; align-items: start; }
 footer p { margin: 4px 0; color: var(--muted); }
 .generated-note { grid-column: 1 / -1; font-size: 12px; }
+.build-id { font-size: 13px; font-variant-numeric: tabular-nums; }
 .status-toast { position: fixed; z-index: 50; right: 20px; bottom: max(20px, env(safe-area-inset-bottom)); max-width: 390px; padding: 14px 18px; border: 2px solid var(--ink); background: var(--sheet); box-shadow: 5px 5px 0 var(--ink); font-weight: 700; }
 .offline-ribbon { position: fixed; z-index: 40; top: 0; left: 50%; padding: 5px 12px; border: 1px solid var(--ink); border-top: 0; background: #f7ecd4; font-size: 13px; font-weight: 800; transform: translateX(-50%); }
 
@@ -196,8 +226,20 @@ footer p { margin: 4px 0; color: var(--muted); }
 .legal-sheet p { max-width: 68ch; }
 .back-link { display: block; width: min(800px, calc(100% - 40px)); min-height: 44px; margin: -68px auto 80px; font-weight: 800; }
 
+.demo-intro { width: min(1080px, calc(100% - 40px)); margin: 48px auto 40px; display: flex; align-items: end; justify-content: space-between; gap: 32px; }
+.demo-intro h1 { max-width: 14ch; font-size: clamp(40px, 5vw, 60px); }
+.demo-intro .lede { margin-bottom: 0; }
+.demo-intro > button { flex: 0 0 auto; }
+.not-found-main { display: grid; min-height: 68vh; place-items: center; padding: 48px 20px 96px; }
+.not-found-sheet { width: min(720px, 100%); padding: clamp(32px, 6vw, 72px); border: 2px solid var(--ink); background: var(--sheet); box-shadow: var(--shadow); transform: rotate(-.4deg); }
+.not-found-sheet h1 { max-width: 13ch; }
+.not-found-sheet p:not(.eyebrow) { margin: 24px 0; color: var(--muted); font-size: 18px; }
+
 @media (max-width: 820px) {
   .site-header nav { display: none; }
+  .demo-banner { align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .demo-banner > div { align-items: flex-start; }
+  .demo-banner > div:first-child { flex-direction: column; gap: 0; padding: 5px 0; }
   .hero { grid-template-columns: 1fr; margin-top: 32px; }
   .hero-copy { max-width: 650px; }
   .hero-art { width: min(680px, 95%); }
@@ -206,13 +248,18 @@ footer p { margin: 4px 0; color: var(--muted); }
   .capture-panel { padding: 0; }
   .method-grid { grid-template-columns: 1fr; }
   .maker-pack { gap: 36px; }
+  .demo-intro { align-items: flex-start; flex-direction: column; }
 }
 
 @media (max-width: 520px) {
   body { background-size: 20px 20px; }
   .site-header { width: min(100% - 28px, 1200px); min-height: 68px; }
+  .demo-banner { padding: 6px 8px 6px 12px; }
+  .demo-banner span { display: none; }
+  .demo-banner > div:last-child { gap: 0; }
+  .banner-button, .banner-link { padding-inline: 8px; font-size: 14px; }
   .install-button { display: none !important; }
-  .hero, .workbench, .method-section, .maker-pack, .legal-sheet, footer { width: calc(100% - 28px); }
+  .hero, .demo-intro, .workbench, .method-section, .maker-pack, .legal-sheet, footer { width: calc(100% - 28px); }
   .hero { margin: 28px auto 68px; gap: 38px; }
   h1 { font-size: 44px; }
   .hero-art { width: calc(100% - 8px); }
@@ -225,6 +272,7 @@ footer p { margin: 4px 0; color: var(--muted); }
   .sample-dots { grid-template-columns: repeat(5, 42px); gap: 7px; }
   .sample-dot { width: 42px; height: 42px; }
   .button-row > .primary-button, .button-row > .secondary-button { width: 100%; }
+  .hero-actions > .primary-button, .hero-actions > .secondary-button { width: 100%; }
   .maker-pack { padding: 26px 20px; }
   .license-slip { padding: 22px 18px; }
   footer { grid-template-columns: 1fr; }

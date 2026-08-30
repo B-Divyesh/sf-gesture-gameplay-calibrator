@@ -1,12 +1,14 @@
 {
   "name": "movemap",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "private": true,
   "type": "module",
   "engines": { "node": ">=20.19.0" },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "tsc -b --pretty false",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
