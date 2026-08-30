@@ -317,7 +317,7 @@ All earlier verification/polish/handoff records were read. Current status:
 | partial-save, icon, focused-Space | Fixed: local E2E passed persistence, 512px icon, native Space; live bytes match. |
 | undersized links | Fixed: independent 390px live measurement found none. |
 | missing rate limit | Fixed: standalone live check got 30/60 429 with positive `Retry-After`. |
-| missing claims/demo/cold screen/discovery/copy audit/whitespace | Demo/cold screen/discovery/recovery exist; claims/copy gaps are F-1-3 to F-1-16. |
+| missing claims/demo/cold screen/discovery/copy audit/whitespace | Demo/cold screen/discovery/recovery exist; claims/copy gaps are F-1-3 to F-1-17. |
 
 ## Missed leverage
 
