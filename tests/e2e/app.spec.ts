@@ -17,6 +17,25 @@ test('home is semantic, keyboard-ready, and free of console errors', async ({ pa
   expect(errors).toEqual([]);
 });
 
+test('all public screens have no axe accessibility violations', async ({ page }) => {
+  for (const path of ['/', '/demo', '/privacy/', '/terms/', '/missing-page']) {
+    await page.goto(path);
+    const accessibility = await new AxeBuilder({ page }).analyze();
+    expect(accessibility.violations, `Accessibility violations on ${path}`).toEqual([]);
+  }
+});
+
+test('cold first screen names its users, offers the demo, and states three facts', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Test webcam gestures before wiring your game');
+  await expect(page.getByText(/For webcam game makers and players/)).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo');
+  await expect(page.locator('.hero-facts li')).toHaveCount(3);
+  await expect(page.locator('.hero-facts')).toContainText('Private:');
+  await expect(page.locator('.hero-facts')).toContainText('Offline:');
+  await expect(page.locator('.hero-facts')).toContainText('Price:');
+});
+
 test('the free experience is same-origin and creates no license state', async ({ page, baseURL }) => {
   const origins = new Set<string>();
   page.on('request', (request) => origins.add(new URL(request.url()).origin));
@@ -48,6 +67,24 @@ test('setup explains a declined camera and offers a recovery path', async ({ pag
   await page.getByLabel('Experiment name').fill('Desk jump');
   await page.getByRole('button', { name: 'Allow camera & begin' }).click();
   await expect(page.getByRole('alert')).not.toBeEmpty();
+});
+
+test('whitespace-only setup names the problem and focuses the invalid field', async ({ page }) => {
+  await page.goto('/');
+  const experiment = page.getByLabel('Experiment name');
+  const checkpoint = page.getByLabel('Checkpoint 1 (required)');
+  await experiment.fill('   ');
+  await page.getByRole('button', { name: 'Allow camera & begin' }).click();
+  await expect(page.getByRole('alert')).toContainText('not only spaces');
+  await expect(experiment).toBeFocused();
+  await expect(experiment).toHaveAttribute('aria-invalid', 'true');
+
+  await experiment.fill('Room check');
+  await checkpoint.fill('   ');
+  await page.getByRole('button', { name: 'Allow camera & begin' }).click();
+  await expect(page.getByRole('alert')).toContainText('not only spaces');
+  await expect(checkpoint).toBeFocused();
+  await expect(checkpoint).toHaveAttribute('aria-invalid', 'true');
 });
 
 test('rejects malformed imports without replacing the saved calibration', async ({ page }) => {
@@ -162,7 +199,7 @@ test('Space preserves the native action of the focused Clear button', async ({ p
 test('every visible mobile target is at least 44 by 44 CSS pixels @regression:mobile-targets', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
-  for (const path of ['/', '/privacy/', '/terms/']) {
+  for (const path of ['/', '/demo', '/privacy/', '/terms/', '/missing-page']) {
     await page.goto(path);
     const undersized = await page.locator('a, button, input').evaluateAll((elements) => elements
       .filter((element) => {
@@ -183,6 +220,34 @@ test('every visible mobile target is at least 44 by 44 CSS pixels @regression:mo
 
     expect(undersized, `Undersized targets on ${path}`).toEqual([]);
   }
+});
+
+test('desktop header links meet the 44px target-size rule', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const undersized = await page.locator('.site-header nav a').evaluateAll((links) => links
+    .map((link) => {
+      const rect = link.getBoundingClientRect();
+      return { label: link.textContent?.trim(), width: rect.width, height: rect.height };
+    })
+    .filter((target) => target.width < 44 || target.height < 44));
+  expect(undersized).toEqual([]);
+});
+
+test('metadata, discovery files, and the not-found page are complete', async ({ page, request }) => {
+  for (const [path, title] of [['/', 'MoveMap — test webcam gestures locally'], ['/demo', 'Demo — MoveMap'], ['/privacy/', 'Privacy — MoveMap'], ['/terms/', 'Terms — MoveMap']] as const) {
+    await page.goto(path);
+    await expect(page).toHaveTitle(title);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /gesture-gameplay-calibrator\.sociobot\.in/);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /movemap-social\.jpg/);
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/icons/apple-touch-icon.png');
+    await expect(page.getByText('Version 1.0.4')).toBeVisible();
+  }
+  expect((await request.get('/robots.txt')).headers()['content-type']).toContain('text/plain');
+  expect(await (await request.get('/sitemap.xml')).text()).toContain('/demo');
+  await page.goto('/missing-page');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page is not in MoveMap');
+  await expect(page.getByRole('link', { name: 'Open the workbench' })).toHaveAttribute('href', '/');
 });
 
 test('checkout and returned licenses use only the registered Sociobot product', async ({ page }) => {

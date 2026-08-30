@@ -66,6 +66,8 @@ smooth scrolling become instant opacity/state changes.
 - Icons, landmark overlay, chart, paper clips, ticks, and ruled textures are
   authored in project SVG/CSS so they remain crisp and semantically controlled.
 - PWA icons are original programmatic artwork using the `M` route-line mark.
+- The 1200×630 social preview is a center crop of the original generated hero;
+  the 180px Apple touch icon is a resize of the original programmatic PWA mark.
 
 ### Hero prompt sheet
 

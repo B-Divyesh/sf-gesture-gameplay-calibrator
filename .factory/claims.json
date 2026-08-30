@@ -1,0 +1,51 @@
+[
+  {
+    "id": "private-processing",
+    "claim": "Camera frames stay on this device; MoveMap sends no camera data or analytics off-origin.",
+    "where": "landing facts, setup consent, privacy page, README",
+    "test": "npm run test:e2e -- --grep @claim:private-processing",
+    "sandbox": "fresh demo context with fake camera; record a sample, reset, export, and assert every request is same-origin and no cookies exist"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "MoveMap works offline after the first visit.",
+    "where": "landing facts, README",
+    "test": "npm run test:e2e -- --grep @claim:offline-reload",
+    "sandbox": "fresh browser context at /demo; wait for service-worker control, set the context offline, reload, and assert the sample result remains usable"
+  },
+  {
+    "id": "calibration-boundaries",
+    "claim": "A calibration supports up to three checkpoints with ten examples each and a 30-second replay.",
+    "where": "setup, demo, README",
+    "test": "npm run test:e2e -- --grep @claim:calibration-boundaries",
+    "sandbox": "fresh /demo sample; assert three completed 10/10 checkpoints, complete the timed replay, and inspect the exported result"
+  },
+  {
+    "id": "json-export",
+    "claim": "JSON export contains labels, settings, thresholds, and numeric signatures, with no image or video payload.",
+    "where": "landing facts, export result, privacy page, README",
+    "test": "npm run test:e2e -- --grep @claim:json-export",
+    "sandbox": "fresh /demo sample; download and parse the JSON, reject media keys, and assert 352 finite values in a signature"
+  },
+  {
+    "id": "local-persistence",
+    "claim": "A profile stays in browser storage across reloads and can be reset; demo data never touches the real profile database.",
+    "where": "setup recovery, privacy page, demo banner, README",
+    "test": "npm run test:e2e -- --grep @claim:local-persistence",
+    "sandbox": "fresh /demo sample; create a partial calibration, reload it, reset the sample, and assert only the demo database exists"
+  },
+  {
+    "id": "free-core-price",
+    "claim": "Calibration, testing, safety information, and JSON export are free; Maker Pack is a one-time $12 purchase.",
+    "where": "landing facts, Maker Pack section, terms, README",
+    "test": "npm run test:e2e -- --grep @claim:free-core-price",
+    "sandbox": "fresh /demo sample; assert the free-core copy, exact price and one-time wording, and registered Sociobot checkout URL"
+  },
+  {
+    "id": "maker-helper-export",
+    "claim": "Maker Pack exports a JavaScript trigger helper using the calibrated hold and release settings.",
+    "where": "Maker Pack section, exported result, README",
+    "test": "npm run test:e2e -- --grep @claim:maker-helper-export",
+    "sandbox": "fresh /demo sample with a recorded valid Sociobot verification response; download the helper and assert its exported function and calibrated settings"
+  }
+]

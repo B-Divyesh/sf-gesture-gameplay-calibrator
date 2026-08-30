@@ -1,63 +1,75 @@
-# MoveMap independent verification 5 — FAIL
+# MoveMap repair 5 handoff
 
-**Candidate:** `ca164697c637756e3f250d4e5551433f36df93f5`
+**Work order:** `gesture-gameplay-calibrator-repair-5`
 
-**Live:** <https://gesture-gameplay-calibrator.sociobot.in>
+**Verifier report repaired:** `060942007b9a28920a72cab1ea4198ad79f687f6`
 
-**Verified:** 2026-08-30
+**Failed candidate:** `ca164697c637756e3f250d4e5551433f36df93f5`
 
-The candidate is **not releasable**. `.factory/claims.json` is missing, so the
-mandatory first claims gate cannot run. The first screen has no one-click “Try
-it with sample data” demo, and `/demo` is only the ordinary app with no sample,
-banner, reset, exit, or storage isolation. The hero also does not plainly name
-the intended game makers/players or show the required privacy/offline/price
-facts.
+**Artifact:** static Vite + TypeScript offline PWA (`dist/`)
 
-The full evidence and defect list are in
-[`.factory/verification-5.md`](verification-5.md). No product code was changed.
+## Repairs
 
-## What passed
+1. Added `.factory/claims.json` with seven relied-on claims. Each claim has one
+   `@claim:<id>` Playwright definition and its own runnable command.
+2. Added a one-click `/demo` with a completed three-checkpoint calibration,
+   30 examples, a 30-second replay result, immediate JSON export, an isolated
+   camera path, a persistent demo banner, **Reset demo**, and **Start for real**.
+   Demo data uses `movemap-demo`; real data remains in `movemap-local`.
+3. Rebuilt the cold first screen around the job and intended users. The primary
+   sample action and real camera action are adjacent. Privacy, offline, and
+   free-price facts appear as three separate lines.
+4. Added canonical, Open Graph, Twitter, and Apple touch metadata; valid
+   `robots.txt` and `sitemap.xml`; route-specific titles; a designed 404 page;
+   an HTTP 404 response override; a derived 1200×630 social image; and footer
+   version `1.0.4`.
+5. Added `.factory/copy-audit.md` with sentence counts, banned-word results, and
+   the terminology table. Replaced ambiguous first-screen and paid-feature copy.
+6. Trimmed setup values before acceptance. Whitespace-only names now announce
+   a specific error through the existing alert, set `aria-invalid`, and move
+   focus to the field.
+7. Increased all desktop header links to a 44px minimum target. Regression
+   coverage also audits every visible target on all public routes at 390px.
 
-- Clean install and audit; 10/10 unit tests.
-- Exact TypeScript/Vite build to `dist/`.
-- Local and live Playwright: 26/26 each across desktop and 390px.
-- All 16 live files match the candidate build byte-for-byte.
-- Complete one-checkpoint flow and maximum three-checkpoint boundary flow,
-  replay, JSON export, and reload persistence.
-- Full free flow made only same-origin requests; headers and immutable asset
-  caching passed.
-- Axe found zero violations; keyboard focus, reduced motion, mobile targets,
-  and 200% text reflow passed.
-- Live offline reload and update notification path passed.
-- Lighthouse mobile: 98 Performance, 100 Accessibility, 100 Best Practices;
-  LCP 1.4s, TBT 170ms, CLS 0, 90 KiB transfer.
-- Billing allowance is enforced: after cooldown, 30/35 burst requests returned
-  200 and the excess 5 returned 429 with `Retry-After: 4`.
+The existing camera calibration, partial-save recovery, import validation,
+Space-key behavior, free JSON export, license flow, service-worker update path,
+and billing throttling behavior were preserved.
 
-## Release blockers and defects
+## Local evidence
 
-1. **High:** missing `.factory/claims.json` and all tagged claim tests.
-2. **High:** no one-click, isolated sample-data demo; missing `.factory/demo.md`.
-3. **Medium:** no canonical/OG/Twitter/apple metadata, valid robots/sitemap,
-   designed 404, or footer build ID. Lighthouse SEO is 92.
-4. **Medium:** missing `.factory/copy-audit.md`.
-5. **Low:** whitespace-only setup silently does nothing instead of explaining
-   the invalid input.
-6. **Low:** desktop header navigation links are 24.8px high, below 44px.
+- `npm ci` — 54 packages installed; 0 vulnerabilities.
+- `npm audit --audit-level=low` — 0 vulnerabilities.
+- Every command in `.factory/claims.json` — passed separately; 2/2 desktop and
+  mobile executions for each of seven claims.
+- `npm test` — 4 files, 15 tests passed.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed (strict TypeScript source gate).
+- `npm run build` — passed; `dist/index.html` plus demo, legal, and 404 pages.
+- Production payload: 35,121 B JS (12.58 KB gzip), 17,574 B CSS (4.83 KB
+  gzip), 68,074 B hero WebP. No font payload. All are below product budgets.
+- `npm run test:e2e` — 50/50 passed across desktop Chromium and 390×844.
+  Coverage includes camera capture, persistence, reset, JSON/helper downloads,
+  keyboard Space behavior, offline reload, update notice, routing, metadata,
+  44px targets, and every claims sandbox.
+- Playwright axe on `/`, `/demo`, `/privacy/`, `/terms/`, and the 404 screen at
+  both viewports — zero violations.
+- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173 ...` — title, `lang=en`,
+  one h1, main landmark, image alt, button labels, and console checks passed;
+  measured load 627 ms.
+- Lighthouse 12.8.2 mobile against the production preview — Performance 100,
+  Accessibility 100, Best Practices 100, SEO 100; LCP 1.7 s, TBT 0 ms,
+  CLS 0, Speed Index 0.9 s.
+- Desktop and 390px screenshots were visually reviewed. No horizontal
+  overflow, hidden control, or first-screen ambiguity remained.
+- Package/consumer testing is not applicable to this static PWA. The deployable
+  artifact is the built `dist/` directory.
 
-## Reproduce
+## Deployment and live evidence
 
-```sh
-npm ci
-npm audit --audit-level=low
-npm test
-npm run build
-npm run test:e2e
-npm run test:e2e:live
-npm run test:live
-VERIFY_NODE_MODULES="$PWD/node_modules" /opt/fleet/lib/verify-url.sh \
-  https://gesture-gameplay-calibrator.sociobot.in /tmp/movemap-verify-url
-```
+Pending the repair commit and production upload. This section will be replaced
+with the deployed commit, byte-identity, live browser, response-policy, billing,
+offline, and Lighthouse results before final handoff.
 
-After adding the missing claims/demo contract, run every test command from
-`.factory/claims.json` before these general gates.
+## Known gaps and next steps
+
+No product-code gap is known. Production evidence is the only remaining step.

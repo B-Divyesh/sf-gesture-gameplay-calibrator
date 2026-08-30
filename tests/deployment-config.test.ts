@@ -5,6 +5,7 @@ type StaticWebAppConfig = {
   globalHeaders: Record<string, string>;
   mimeTypes: Record<string, string>;
   routes: Array<{ route: string; headers?: Record<string, string> }>;
+  responseOverrides?: Record<string, { rewrite?: string }>;
 };
 
 const config = JSON.parse(readFileSync('public/staticwebapp.config.json', 'utf8')) as StaticWebAppConfig;
@@ -31,6 +32,11 @@ describe('static deployment response policy', () => {
     for (const path of ['/', '/sw.js', '/manifest.webmanifest']) {
       expect(config.routes.find((entry) => entry.route === path)?.headers?.['Cache-Control']).toBe('no-cache, no-store, must-revalidate');
     }
+  });
+
+  it('serves the demo directly and rewrites missing pages to the designed 404', () => {
+    expect(config.routes.find((entry) => entry.route === '/demo')).toBeDefined();
+    expect(config.responseOverrides?.['404']?.rewrite).toBe('/404.html');
   });
 
   it('ships icons at the exact dimensions advertised by the manifest', () => {

@@ -49,6 +49,26 @@ assert.match(root.headers.get('permissions-policy') ?? '', /camera=\(self\)/);
 assert.equal(root.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 assert.equal(root.headers.get('x-frame-options'), 'DENY');
 assert.equal(root.headers.get('x-content-type-options'), 'nosniff');
+const rootHtml = await root.text();
+assert.match(rootHtml, /rel="canonical" href="https:\/\/gesture-gameplay-calibrator\.sociobot\.in\/"/);
+assert.match(rootHtml, /property="og:image"/);
+
+const demo = await fetch(`${origin}/demo`, { cache: 'no-store' });
+assert.equal(demo.status, 200, '/demo should open directly');
+assert.match(await demo.text(), /<title>Demo — MoveMap<\/title>/);
+
+const missing = await fetch(`${origin}/release-qa-missing-page`, { cache: 'no-store' });
+assert.equal(missing.status, 404, 'unknown paths should return HTTP 404');
+assert.match(await missing.text(), /<title>Page not found — MoveMap<\/title>/);
+
+const robots = await fetch(`${origin}/robots.txt`, { cache: 'no-store' });
+assert.equal(robots.status, 200);
+assert.match(robots.headers.get('content-type') ?? '', /^text\/plain/);
+assert.match(await robots.text(), /^User-agent: \*/);
+
+const sitemap = await fetch(`${origin}/sitemap.xml`, { cache: 'no-store' });
+assert.equal(sitemap.status, 200);
+assert.match(await sitemap.text(), /<loc>https:\/\/gesture-gameplay-calibrator\.sociobot\.in\/demo<\/loc>/);
 
 const initialJavaScript = localFiles.filter((path) => /dist\/assets\/main-.*\.js$/.test(path));
 const initialStyles = localFiles.filter((path) => /dist\/assets\/main-.*\.css$/.test(path));
