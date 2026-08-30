@@ -1,49 +1,75 @@
-# Independent verification 4 handoff — FAIL
+# MoveMap repair 4 — PASS
 
-Candidate `a1f1394d777b563d092fdd4dbd844898bbd0b257` was independently tested
-from a clean exact checkout against
-<https://gesture-gameplay-calibrator.sociobot.in> on 2026-08-28.
+**Base candidate:** `a1f1394d777b563d092fdd4dbd844898bbd0b257`
+**Verifier report repaired:** `607afc3131cf18b0810b510eb842d72a088d4a10` / `.factory/verification-4.md`
+**Repair commit:** `0f2b081` (`fix: restore 44px mobile link targets`)
+**Deployed:** 2026-08-30 to <https://gesture-gameplay-calibrator.sociobot.in> (Static Web Apps deployment `a143e586-63aa-46cb-baed-c7ddf7dac5e8`)
 
-## Result
+## Repair made
 
-**FAIL — one low-severity acceptance defect remains.** The live PWA matches all
-16 candidate build files and works end to end. The formerly blocking Sociobot
-license-verification limiter is now operating correctly. Three secondary links
-at 390px are nevertheless smaller than the work order's mandatory 44×44 CSS
-pixel target size, so this strict acceptance run cannot be marked PASS.
+The verifier's sole release blocker was reproduced before changing source with
+an exact 390 by 844 CSS-pixel Playwright rectangle audit:
 
-No product source was changed; only this handoff and
-`.factory/verification-4.md` were added/updated.
+| Route | Target | Before |
+| --- | --- | --- |
+| `/` | Maker Pack `terms` link | 37.7 by 44 px |
+| `/privacy/` | `privacy@sociobot.in` mail link | 161.8 by 19 px |
+| `/terms/` | `support@sociobot.in` mail link | 164.5 by 19 px |
 
-## Verification summary
+These secondary text links were inline, so they did not inherit the product's
+44px control sizing. `src/main.ts` now marks those three links as
+`touch-link`; `src/styles.css` gives that class an explicit `inline-flex`,
+`min-inline-size: 44px`, and `min-block-size: 44px` hit area. The visually
+reviewed 390px layouts remain free of overlap and horizontal overflow.
 
-| Check | Result |
+`tests/e2e/app.spec.ts` now has the exact regression gate:
+`every visible mobile target is at least 44 by 44 CSS pixels
+@regression:mobile-targets`. It sets a 390 by 844 viewport and enumerates all
+visible `a`, `button`, and `input` rectangles on `/`, `/privacy/`, and
+`/terms/`, failing with the target details if either dimension is below 44px.
+After the repair the exhaustive audit found 0 undersized targets among 17 home,
+7 privacy, and 7 terms controls.
+
+## Verification evidence
+
+| Check | Evidence |
 | --- | --- |
-| Clean install and audit | `npm ci` passed; 54 packages; 0 vulnerabilities |
-| Unit/integration | `npm test`: 3 files / 10 tests passed |
-| Type/build | `npm run build` passed; `tsc -b`; `dist/` produced |
-| Local browser | `npm run test:e2e`: 26/26 passed |
-| Live browser | `npm run test:e2e:live`: 26/26 passed |
-| Live identity/policy/rate gate | `npm run test:live` passed; 16 files match |
-| Rate limit | 60 concurrent verify calls: 30×200, 30×429; every 429 had `Retry-After: 4` |
-| Lighthouse mobile | 96 Performance, 100 Accessibility, 100 Best Practices; LCP 1,456 ms; TBT 229 ms; CLS 0 |
-| Axe | 0 violations on home/privacy/terms at desktop and 390px |
-| PWA | Controlled worker, versioned caches, offline reload, and update notice pass |
-| Privacy | Full free flow same-origin only; no trackers, fonts/scripts, or camera upload |
+| Clean install and audit | `npm ci` installed 54 packages; `npm audit --audit-level=low` reported 0 vulnerabilities. |
+| Unit/integration | `npm test`: 3 files, 10 tests passed. |
+| Type and production build | `npm run build` passed (`tsc -b && vite build`) and produced `dist/`. No separate lint script is configured; the TypeScript build is the repository's static check. |
+| Build budget | Main JS 30.05 kB / 11.24 kB gzip; CSS 14.45 kB / 4.22 kB gzip; hero WebP 68.07 kB. |
+| Local browser matrix | `npm run test:e2e`: 26/26 passed across Desktop Chromium and the 390 by 844 mobile project, including keyboard, camera-denial, import safety, persistence, offline reload, and update-toast paths. |
+| Live browser matrix | `npm run test:e2e:live`: 26/26 passed against production after deployment. |
+| Touch-target regression | The new 390px route audit passed locally and live with no rectangle below 44 by 44 CSS pixels. |
+| Accessibility | Axe found 0 violations on `/`, `/privacy/`, and `/terms/` at desktop and 390px, locally and live. Keyboard smoke tests cover the visible skip link and focused Clear-button Space action. |
+| URL smoke | `/opt/fleet/lib/verify-url.sh` passed locally and live. Live navigation was 831 ms with zero console/page errors, `lang=en`, one h1, a main landmark, image alt text, and no unlabeled buttons. |
+| Performance | Local Lighthouse 12.8.2 mobile: Performance 97, Accessibility 100, Best Practices 100; LCP 2.4 s, TBT 0 ms, CLS 0, 91 KiB transfer. |
+| Privacy and identity | Browser suite preserves same-origin-only free startup, no automatic license state, local IndexedDB profile storage, and no camera upload. The existing invalid-license and returned-token paths still pass. |
+| PWA/offline/update | Browser suite confirms a controlled cached shell reloads offline with the offline ribbon and that an installed replacement worker announces the update. |
+| Response policy and live identity | `npm run test:live` passed: all 16 deployable files are byte-identical to `dist`; document and asset cache policy, CSP, HSTS, permissions policy, manifest MIME, maskable 512px icon, product catalog identity, and checkout redirect all passed. |
+| Billing limiter | The same final live gate made a 60-request invalid-license burst: 59 responses were 429 and every throttled response supplied a positive `Retry-After`. |
+| Package/consumer | Not applicable: MoveMap remains a static PWA, not a published package. |
 
-The independent maximum flow used all three checkpoints, maximum input lengths,
-30 captures, a real 30-second replay with a marked false trigger, export, and
-reload. Exported profiles contained 352-number signatures and no image/video
-data. Empty input, camera denial, malformed import, draft resume/clear, invalid
-license, and keyboard recovery paths passed. Desktop and mobile screenshots
-were visually reviewed with no overflow or browser errors.
+## Runbook
 
-## Remaining defect
+```sh
+npm ci
+npm audit --audit-level=low
+npm test
+npm run build
+npm run test:e2e
+npm run test:e2e:live
+npm run test:live
+```
 
-**Low — undersized mobile link targets.** At 390px the Maker Pack `terms` link
-is 37.7×44px; the privacy and terms email links are 161.8×19px and 164.5×19px.
-The work order requires at least 44×44px. All core controls pass, and axe has no
-findings, but the explicit target-size acceptance rule remains unmet.
+Deploy the already built static artifact with:
 
-Full commands, deployment hashes, response headers, product evidence, and the
-retest procedure are in `.factory/verification-4.md`.
+```sh
+/opt/fleet/lib/deploy-static.sh gesture-gameplay-calibrator dist
+```
+
+## Known gaps and next steps
+
+None. The product remains the original local-first, offline PWA; this repair
+only expands secondary link hit areas and adds the exhaustive mobile regression
+coverage.
