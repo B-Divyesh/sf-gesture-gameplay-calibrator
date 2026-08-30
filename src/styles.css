@@ -181,6 +181,7 @@ kbd { padding: 2px 7px; border: 1px solid var(--rule); border-radius: 3px; backg
 .active-license { display: inline-block; padding: 8px 12px; background: #cfe2d6; color: #174c3a; font-weight: 800; }
 .purchase-note { font-size: 13px; }
 .purchase-note a, footer nav a { display: inline-flex; min-height: 44px; align-items: center; }
+.touch-link { display: inline-flex; align-items: center; min-inline-size: 44px; min-block-size: 44px; }
 
 footer { width: min(1200px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0 calc(40px + env(safe-area-inset-bottom)); border-top: 2px solid var(--ink); display: grid; grid-template-columns: 1fr auto; gap: 12px 40px; align-items: start; }
 footer p { margin: 4px 0; color: var(--muted); }

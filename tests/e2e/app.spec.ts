@@ -159,18 +159,29 @@ test('Space preserves the native action of the focused Clear button', async ({ p
   await expect(clear).toBeDisabled();
 });
 
-test('navigation and legal links keep 44px touch targets', async ({ page }) => {
-  await page.goto('/');
-  for (const locator of [
-    page.locator('.brand'),
-    page.locator('.purchase-note a').first(),
-    page.locator('.purchase-note a').last(),
-    page.locator('footer nav a').first(),
-    page.locator('footer nav a').nth(1),
-    page.locator('footer nav a').last(),
-  ]) {
-    const box = await locator.boundingBox();
-    expect(box?.height).toBeGreaterThanOrEqual(44);
+test('every visible mobile target is at least 44 by 44 CSS pixels @regression:mobile-targets', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  for (const path of ['/', '/privacy/', '/terms/']) {
+    await page.goto(path);
+    const undersized = await page.locator('a, button, input').evaluateAll((elements) => elements
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      })
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          name: (element.getAttribute('aria-label') || element.textContent || '').trim().replace(/\s+/g, ' '),
+          href: element.getAttribute('href'),
+          width: rect.width,
+          height: rect.height,
+        };
+      })
+      .filter((target) => target.width < 44 || target.height < 44));
+
+    expect(undersized, `Undersized targets on ${path}`).toEqual([]);
   }
 });
 
