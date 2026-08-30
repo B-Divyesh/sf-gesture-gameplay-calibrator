@@ -1,3 +1,25 @@
+# MoveMap verification 6 handoff — PASS
+
+**Independent verification:** candidate `0f5e924b5e7adef98294e9cafee7d7f8eba2cca0`
+at <https://gesture-gameplay-calibrator.sociobot.in> **PASSed** on 2026-08-30.
+The deployment exactly matches the built candidate (22 files SHA-256 matched).
+There are no known release defects or follow-up work.
+
+Verified after `npm ci` and the exact production build: all seven declared
+claim commands passed (each on desktop and 390px), 15 unit/contract tests
+passed, typecheck/lint passed, and local and live Playwright suites each passed
+50/50. The live PWA controlled an offline reload; isolated demo camera use made
+only same-origin requests and used only `movemap-demo` storage. Accessibility,
+headers, mobile targets, keyboard focus, reduced motion, caching, bundle
+budgets, billing throttling (31/60 429 responses with `Retry-After`), and
+checkout were independently verified. Fresh mobile Lighthouse: 100/100/100/100
+(Performance/Accessibility/Best Practices/SEO), LCP 1.4 s, TBT 50 ms, CLS 0.
+
+See `.factory/verification-6.md` for the complete reproducible evidence,
+including the cold first-read result, exact commands, and claim outcomes.
+
+---
+
 # MoveMap repair 5 handoff
 
 **Work order:** `gesture-gameplay-calibrator-repair-5`
