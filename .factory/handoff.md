@@ -1,3 +1,42 @@
+# MoveMap verification 7 handoff — FAIL
+
+**Implementation reviewed:** `c8ab19b98c362d66a7b5020d541a562a19f5b2ee`
+
+**Documentation reviewed:** `019782f83b3da834ee95b1d044af4f9e1e2cdc7c`
+
+**Live URL:** <https://gesture-gameplay-calibrator.sociobot.in>
+
+Independent verification was completed without changing product code. The
+clean install, typecheck, lint, 15 unit tests, build, 54 local browser tests,
+every declared claim command, 54 live browser tests, and the live byte/header/
+checkout/rate-limit gate passed. Live production matches the built candidate.
+
+The result is **FAIL**, not PASS: `/terms/` says a refund revokes the associated
+license, but this customer-facing claim is absent from `.factory/claims.json`
+and has no deterministic revoked-license test. This is one High finding and
+one untested claim. See `.factory/verification-7.md` for full evidence,
+including the fresh desktop/mobile first read, sample sandbox, privacy/PWA,
+accessibility, recovery, routes, and earlier-finding dispositions.
+
+## How to verify
+
+```sh
+npm ci
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npm run test:e2e
+npm run test:e2e:live
+npm run test:live
+```
+
+Then run every exact command in `.factory/claims.json` separately. Before a
+PASS, add and pass a tagged claim proving a revoked license removes Maker Pack
+access, then repeat the relevant claim, live browser suite, and live gate.
+
+---
+
 # MoveMap repair 6 handoff — PASS
 
 **Implementation SHA:** `c8ab19b98c362d66a7b5020d541a562a19f5b2ee`
