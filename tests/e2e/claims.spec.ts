@@ -10,6 +10,28 @@ async function downloadedJson(page: import('@playwright/test').Page): Promise<Re
   return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
 }
 
+async function storedDemoProfile(page: import('@playwright/test').Page): Promise<Record<string, unknown>> {
+  return page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('movemap-demo', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const profile = await new Promise<Record<string, unknown>>((resolve, reject) => {
+      const request = database.transaction('profiles').objectStore('profiles').get('current');
+      request.onsuccess = () => resolve(request.result as Record<string, unknown>);
+      request.onerror = () => reject(request.error);
+    });
+    database.close();
+    return profile;
+  });
+}
+
+function nestedKeys(value: unknown): string[] {
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value).flatMap(([key, nested]) => [key.toLowerCase(), ...nestedKeys(nested)]);
+}
+
 test('@claim:private-processing camera use and export send no data off-origin', async ({ page, context, baseURL }) => {
   const productOrigin = new URL(baseURL!).origin;
   const outgoing = new Set<string>();
@@ -53,28 +75,34 @@ test('@claim:calibration-boundaries sample proves three checkpoints, ten example
   await page.clock.install();
   await page.getByRole('button', { name: 'Replay 30 seconds' }).click();
   await page.clock.fastForward(31_000);
-  const profile = await downloadedJson(page) as { checkpoints: Array<{ examples: number[][] }>; lastTest: { durationSeconds: number } };
+  await expect(page.getByRole('meter', { name: 'Live confidence' })).toBeVisible();
+  const profile = await downloadedJson(page) as { checkpoints: Array<{ examples: number[][]; centroid: number[]; threshold: number }>; lastTest: { durationSeconds: number } };
   expect(profile.checkpoints).toHaveLength(3);
   expect(profile.checkpoints.map((checkpoint) => checkpoint.examples.length)).toEqual([10, 10, 10]);
   expect(profile.lastTest.durationSeconds).toBe(30);
+  for (const checkpoint of profile.checkpoints) {
+    const distances = checkpoint.examples.map((example) => Math.sqrt(example.reduce(
+      (sum, value, index) => sum + (value - (checkpoint.centroid[index] ?? 0)) ** 2,
+      0,
+    ) / example.length));
+    const expectedThreshold = Math.min(1.7, Math.max(0.36, Math.max(...distances) * 1.22));
+    expect(checkpoint.threshold).toBeCloseTo(expectedThreshold, 10);
+  }
 });
 
 test('@claim:json-export export contains numeric signatures and no image or video payload', async ({ page }) => {
   await page.goto('/demo');
+  const savedProfile = await storedDemoProfile(page) as { checkpoints: Array<{ examples: unknown[][] }> };
   const profile = await downloadedJson(page) as { checkpoints: Array<{ examples: unknown[][] }> };
-  const keys: string[] = [];
-  const visit = (value: unknown): void => {
-    if (!value || typeof value !== 'object') return;
-    for (const [key, nested] of Object.entries(value)) {
-      keys.push(key.toLowerCase());
-      visit(nested);
-    }
-  };
-  visit(profile);
-  expect(keys).not.toContain('image');
-  expect(keys).not.toContain('video');
-  expect(profile.checkpoints[0]?.examples[0]).toHaveLength(352);
-  expect(profile.checkpoints[0]?.examples[0]?.every((value) => Number.isFinite(value))).toBe(true);
+  for (const candidate of [savedProfile, profile]) {
+    const keys = nestedKeys(candidate);
+    expect(keys).not.toContain('image');
+    expect(keys).not.toContain('video');
+    expect(keys).not.toContain('face');
+    expect(keys).not.toContain('identity');
+    expect(candidate.checkpoints[0]?.examples[0]).toHaveLength(352);
+    expect(candidate.checkpoints[0]?.examples[0]?.every((value) => Number.isFinite(value))).toBe(true);
+  }
 });
 
 test('@claim:local-persistence demo changes survive reload and reset without touching real data', async ({ page, context, baseURL }) => {
@@ -101,6 +129,31 @@ test('@claim:free-core-price the free workbench and one-time Maker Pack price ar
   await expect(page.locator('.price')).toContainText('$12');
   await expect(page.locator('.price')).toContainText('one-time purchase');
   await expect(page.getByRole('link', { name: 'Buy Maker Pack' })).toHaveAttribute('href', 'https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/checkout');
+});
+
+test('@claim:maker-pack-checkout payment stays out of the app and the catalog entry opens hosted checkout', async ({ page, request, baseURL }) => {
+  await page.goto('/demo');
+  await expect(page.locator('iframe, input[autocomplete^="cc-"]')).toHaveCount(0);
+  const scriptOrigins = await page.locator('script[src]').evaluateAll((scripts) => scripts.map((script) => new URL((script as HTMLScriptElement).src).origin));
+  expect([...new Set(scriptOrigins)]).toEqual([new URL(baseURL!).origin]);
+
+  const catalogResponse = await request.get('https://api.sociobot.in/api/v1/products', { failOnStatusCode: false });
+  expect(catalogResponse.status()).toBe(200);
+  const catalog = await catalogResponse.json() as { data: Array<Record<string, unknown>> };
+  const product = catalog.data.find((candidate) => candidate.slug === 'gesture-gameplay-calibrator');
+  if (!product) throw new Error('MoveMap Maker Pack is missing from the production catalog.');
+  expect(product).toEqual({
+    checkout_url: 'https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/checkout',
+    currency: 'USD',
+    name: 'MoveMap Maker Pack',
+    price_minor: 1200,
+    product_url: 'https://gesture-gameplay-calibrator.sociobot.in/',
+    slug: 'gesture-gameplay-calibrator',
+  });
+
+  const checkoutResponse = await request.get(String(product.checkout_url), { failOnStatusCode: false, maxRedirects: 0 });
+  expect(checkoutResponse.status()).toBe(303);
+  expect(checkoutResponse.headers().location).toMatch(/^https:\/\/checkout\.dodopayments\.com\/session\//);
 });
 
 test('@claim:maker-helper-export a valid Maker Pack license exports the calibrated helper', async ({ page }) => {

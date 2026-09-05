@@ -191,7 +191,8 @@ test('Space preserves the native action of the focused Clear button', async ({ p
   await page.getByRole('button', { name: 'Record example 1' }).click();
   const clear = page.getByRole('button', { name: 'Clear this checkpoint' });
   await clear.focus();
-  await page.keyboard.press('Space');
+  await expect(clear).toBeFocused();
+  await clear.press('Space');
   await expect(page.getByRole('button', { name: 'Record example 1' })).toBeVisible();
   await expect(clear).toBeDisabled();
 });
@@ -241,7 +242,7 @@ test('metadata, discovery files, and the not-found page are complete', async ({ 
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /gesture-gameplay-calibrator\.sociobot\.in/);
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /movemap-social\.jpg/);
     await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/icons/apple-touch-icon.png');
-    await expect(page.getByText('Version 1.0.4')).toBeVisible();
+    await expect(page.getByText('Version 1.0.5')).toBeVisible();
   }
   expect((await request.get('/robots.txt')).headers()['content-type']).toContain('text/plain');
   expect(await (await request.get('/sitemap.xml')).text()).toContain('/demo');
@@ -276,6 +277,29 @@ test('privacy and terms are direct, standalone routes', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Privacy');
   await page.goto('/terms/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Terms');
+});
+
+test('route entry and Back focus the new page heading and announce it', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('footer').getByRole('link', { name: 'Privacy' }).click();
+  const privacyHeading = page.getByRole('heading', { level: 1 });
+  await expect(privacyHeading).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Privacy and your MoveMap data loaded.');
+
+  await page.goBack();
+  const homeHeading = page.getByRole('heading', { level: 1 });
+  await expect(homeHeading).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Test webcam gestures before wiring your game loaded.');
+
+  await page.goto('/terms/');
+  const termsHeading = page.getByRole('heading', { level: 1 });
+  await expect(termsHeading).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Terms of use loaded.');
+
+  await page.goto('/missing-focus-check');
+  const missingHeading = page.getByRole('heading', { level: 1 });
+  await expect(missingHeading).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('This page is not in MoveMap loaded.');
 });
 
 test('previously visited app shell works offline', async ({ page, context }) => {

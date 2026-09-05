@@ -15,17 +15,17 @@
   },
   {
     "id": "calibration-boundaries",
-    "claim": "A calibration supports up to three checkpoints with ten examples each and a 30-second replay.",
-    "where": "setup, demo, README",
+    "claim": "A calibration supports up to three checkpoints, uses ten examples to set each threshold, shows confidence, and runs a 30-second replay.",
+    "where": "setup, demo, how calibration works, README",
     "test": "npm run test:e2e -- --grep @claim:calibration-boundaries",
-    "sandbox": "fresh /demo sample; assert three completed 10/10 checkpoints, complete the timed replay, and inspect the exported result"
+    "sandbox": "fresh /demo sample; assert three completed 10/10 checkpoints, verify thresholds against the exported examples, inspect the confidence meter, and complete the timed replay"
   },
   {
     "id": "json-export",
-    "claim": "JSON export contains labels, settings, thresholds, and numeric signatures, with no image or video payload.",
-    "where": "landing facts, export result, privacy page, README",
+    "claim": "Saved and exported profiles contain labels, settings, thresholds, results, and numeric signatures, with no image, video, face, or identity fields.",
+    "where": "setup, how calibration works, export result, privacy page, README",
     "test": "npm run test:e2e -- --grep @claim:json-export",
-    "sandbox": "fresh /demo sample; download and parse the JSON, reject media keys, and assert 352 finite values in a signature"
+    "sandbox": "fresh /demo sample; inspect IndexedDB and the downloaded JSON, reject media and identity keys, and assert 352 finite values in a signature"
   },
   {
     "id": "local-persistence",
@@ -40,6 +40,13 @@
     "where": "landing facts, Maker Pack section, terms, README",
     "test": "npm run test:e2e -- --grep @claim:free-core-price",
     "sandbox": "fresh /demo sample; assert the free-core copy, exact price and one-time wording, and registered Sociobot checkout URL"
+  },
+  {
+    "id": "maker-pack-checkout",
+    "claim": "MoveMap embeds no card form or payment script; Buy Maker Pack opens the registered Sociobot/Dodo hosted checkout.",
+    "where": "Maker Pack buy link, privacy, terms, README",
+    "test": "npm run test:e2e -- --grep @claim:maker-pack-checkout",
+    "sandbox": "open /demo and reject embedded payment UI; request the production catalog and exact checkout URL without following it; assert the $12 entry and a 303 hosted-checkout redirect"
   },
   {
     "id": "maker-helper-export",

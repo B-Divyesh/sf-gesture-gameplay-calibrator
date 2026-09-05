@@ -1,4 +1,4 @@
-const VERSION = 'movemap-v1.0.4';
+const VERSION = 'movemap-v1.0.5';
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
 const SHELL_URLS = ['/', '/demo', '/privacy/', '/terms/', '/404.html', '/offline.html', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/assets/movemap-social.jpg'];

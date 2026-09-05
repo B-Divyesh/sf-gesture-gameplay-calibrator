@@ -8,7 +8,7 @@ import heroUrl from '../assets/src/movemap-hero.webp';
 
 type Phase = 'idle' | 'capture' | 'ready' | 'testing' | 'results';
 
-const BUILD_VERSION = '1.0.4';
+const BUILD_VERSION = '1.0.5';
 const PUBLIC_ORIGIN = 'https://gesture-gameplay-calibrator.sociobot.in';
 const normalizedPath = location.pathname.replace(/\/$/, '') || '/';
 const demoMode = normalizedPath === '/demo';
@@ -115,9 +115,13 @@ async function persistProfile(): Promise<boolean> {
 function header(): string {
   return `<header class="site-header">
     <a class="brand" href="/" aria-label="MoveMap home"><span class="brand-mark" aria-hidden="true">M</span><span>MoveMap</span></a>
-    <nav aria-label="Primary"><a href="/#workbench">Workbench</a><a href="/demo">Demo</a><a href="/#method">Method</a><a href="/#maker-pack">Maker Pack</a></nav>
+    <nav aria-label="Primary"><a href="/#workbench">Workbench</a><a href="/demo">Demo</a><a href="/#method">How calibration works</a><a href="/#maker-pack">Maker Pack</a></nav>
     <button class="install-button secondary-button" type="button" hidden>Install app</button>
   </header>`;
+}
+
+function routeAnnouncer(): string {
+  return '<p class="visually-hidden" id="route-status" aria-live="polite" aria-atomic="true"></p>';
 }
 
 function footer(): string {
@@ -142,24 +146,24 @@ function demoBanner(): string {
 }
 
 function legalPage(kind: 'privacy' | 'terms'): string {
-  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 30 August 2026</p><h1>Privacy and your MoveMap data</h1>
+  const privacy = `<article class="legal-sheet"><p class="eyebrow">Plain-language policy · 5 September 2026</p><h1 tabindex="-1">Privacy and your MoveMap data</h1>
   <p class="lede">MoveMap is designed so your camera frames and gesture profiles stay on your device.</p>
   <h2>Camera and gesture data</h2><p>Camera access begins only after you press “Allow camera & begin.” Frames are processed in your browser to create small numeric edge signatures. Video and images are never uploaded by MoveMap. Your current profile is stored in this browser’s IndexedDB until you reset it or clear site data.</p>
   <h2>Exports</h2><p>When you export a profile, your browser downloads a JSON file containing checkpoint names, normalized numeric signatures, thresholds, and test results. It contains no photo or video. You control where that file goes.</p>
   <h2>Licensing</h2><p>If you buy or restore Maker Pack, a license token is stored in local storage and sent to Sociobot’s API only to verify the purchase. Checkout is handled by Sociobot/Dodo, the merchant of record. MoveMap does not receive card details.</p>
-  <h2>Analytics and identity</h2><p>MoveMap ships no analytics, advertising trackers, cookies, face recognition, or biometric identity inference. Server hosts may retain ordinary security logs under their own retention policy.</p>
+  <h2>Analytics and profile contents</h2><p>MoveMap does not set cookies or send analytics requests. Profiles contain checkpoint labels, settings, results, and numeric signatures.</p>
   <h2>Your controls</h2><p>Use “Reset notebook” to remove the local profile. Remove the site’s camera permission in browser settings. Clearing site data removes profiles and license state. Questions: <a class="touch-link" href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></article>`;
-  const terms = `<article class="legal-sheet"><p class="eyebrow">Fair-use terms · 30 August 2026</p><h1>Terms of use</h1>
+  const terms = `<article class="legal-sheet"><p class="eyebrow">Fair-use terms · 5 September 2026</p><h1 tabindex="-1">Terms of use</h1>
   <p class="lede">MoveMap is an experimental calibration tool. It helps you measure a setup; it does not guarantee that a gesture will be safe or reliable in every room.</p>
   <h2>Using MoveMap</h2><p>You may use and modify the app under its MIT license. Use a clear, stable area and stop if movement causes discomfort. Movement is optional. Choose a seated, subtle, or hand-only pose when needed. Do not use the tool for surveillance, biometric identity, safety-critical controls, or decisions about people.</p>
   <h2>Maker Pack purchase</h2><p>Maker Pack is a one-time $12 purchase for project convenience features. Core calibration, testing, accessibility, safety information, and JSON export remain free. Sociobot/Dodo is the merchant of record and handles payment and refunds. A refund revokes the associated license.</p>
   <h2>No warranty</h2><p>The software is provided “as is,” without warranty. Camera hardware, lighting, browser behavior, and backgrounds can change recognition results. Always test in the actual environment before mapping a gesture to an action.</p>
   <h2>Acceptable use</h2><p>Do not use MoveMap to harm people, bypass consent, infer identity, or violate applicable law. Questions: <a class="touch-link" href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></article>`;
-  return `${header()}<main id="main" class="legal-main">${kind === 'privacy' ? privacy : terms}<a class="back-link" href="/">← Back to the workbench</a></main>${footer()}`;
+  return `${routeAnnouncer()}${header()}<main id="main" class="legal-main">${kind === 'privacy' ? privacy : terms}<a class="back-link" href="/">← Back to the workbench</a></main>${footer()}`;
 }
 
 function notFoundPage(): string {
-  return `${header()}<main id="main" class="not-found-main"><section class="not-found-sheet"><p class="eyebrow">Page not found · 404</p><h1>This page is not in MoveMap</h1><p>The address may be wrong, or the page may have moved.</p><a class="primary-button button-link" href="/">Open the workbench</a></section></main>${footer()}`;
+  return `${routeAnnouncer()}${header()}<main id="main" class="not-found-main"><section class="not-found-sheet"><p class="eyebrow">Page not found · 404</p><h1 tabindex="-1">This page is not in MoveMap</h1><p>The address may be wrong, or the page may have moved.</p><a class="primary-button button-link" href="/">Open the workbench</a></section></main>${footer()}`;
 }
 
 function setupCard(): string {
@@ -229,8 +233,8 @@ function resultsPanel(): string {
 }
 
 function methodSection(): string {
-  return `<section class="method-section" id="method" aria-labelledby="method-title"><div class="section-heading"><span class="scribble-number" aria-hidden="true">?</span><div><p class="eyebrow">What the score means</p><h2 id="method-title">How MoveMap measures a pose</h2></div></div>
-  <div class="method-grid"><article><span>01</span><h3>Learn the outline</h3><p>MoveMap downsamples each frame and records normalized edge patterns—not a photo, face, or identity.</p></article><article><span>02</span><h3>Find the variation</h3><p>Ten examples reveal how much your natural pose changes. That spread sets the checkpoint threshold.</p></article><article><span>03</span><h3>Stress the room</h3><p>The replay shows live confidence. Change distance or light and mark any false trigger you observe.</p></article></div>
+  return `<section class="method-section" id="method" aria-labelledby="method-title"><div class="section-heading"><span class="scribble-number" aria-hidden="true">?</span><div><p class="eyebrow">How confidence works</p><h2 id="method-title">How MoveMap measures a pose</h2></div></div>
+  <div class="method-grid"><article><span>01</span><h3>Record each pose</h3><p>Each example becomes a numeric signature in your saved and exported profile.</p></article><article><span>02</span><h3>Compare your examples</h3><p>MoveMap uses ten examples to set a threshold for each checkpoint.</p></article><article><span>03</span><h3>Test in your room</h3><p>The replay shows confidence. Change distance or light and mark any false trigger you observe.</p></article></div>
   <aside class="limitations" role="note"><strong>Test condition:</strong> Keep the camera and background fixed when comparing runs. Room changes can alter the score. Use the export as a room-specific reference, not a universal pose model.</aside></section>`;
 }
 
@@ -240,22 +244,33 @@ function makerPackSection(): string {
 }
 
 function landingHero(): string {
-  return `<section class="hero"><div class="hero-copy"><p class="eyebrow">Webcam gesture calibration</p><h1>Test webcam gestures before wiring your game</h1><p class="lede">For webcam game makers and players who need a gesture that works in their real room.</p><div class="hero-actions"><a class="primary-button button-link" href="/demo">Try it with sample data</a><a class="secondary-button button-link" href="#workbench">Set up my camera</a><span>See a finished profile, or record your own.</span></div><ul class="hero-facts"><li><strong>Private:</strong> camera frames stay on this device.</li><li><strong>Offline:</strong> works after the first visit.</li><li><strong>Price:</strong> calibration and JSON export are free.</li></ul></div><figure class="hero-art"><img src="${heroUrl}" width="1152" height="768" alt="An open graph-paper notebook with an abstract jointed paper figure and red checkpoint circles" fetchpriority="high" decoding="async" /><figcaption>Observe → record → test</figcaption></figure></section>`;
+  return `<section class="hero"><div class="hero-copy"><p class="eyebrow">Webcam gesture calibration</p><h1 tabindex="-1">Test webcam gestures before wiring your game</h1><p class="lede">For webcam game makers and players who need a gesture that works in their real room.</p><div class="hero-actions"><a class="primary-button button-link" href="/demo">Try it with sample data</a><a class="secondary-button button-link" href="#workbench">Set up my camera</a><span>See a finished profile, or record your own.</span></div><ul class="hero-facts"><li><strong>Private:</strong> camera frames stay on this device.</li><li><strong>Offline:</strong> works after the first visit.</li><li><strong>Price:</strong> calibration and JSON export are free.</li></ul></div><figure class="hero-art"><img src="${heroUrl}" width="1152" height="768" alt="An open graph-paper notebook with an abstract jointed paper figure and red checkpoint circles" fetchpriority="high" decoding="async" /><figcaption>Three steps for testing a webcam gesture</figcaption></figure></section>`;
 }
 
 function demoIntro(): string {
-  return `<section class="demo-intro"><div><p class="eyebrow">Ready-made room rehearsal</p><h1>Inspect a completed gesture calibration</h1><p class="lede">Review three sampled poses, a 30-second replay, and the exported profile before using your camera.</p></div><button class="secondary-button" id="demo-camera" type="button">Try my camera in this demo</button></section>`;
+  return `<section class="demo-intro"><div><p class="eyebrow">Sample gesture profile</p><h1 tabindex="-1">Inspect a completed gesture calibration</h1><p class="lede">Review three sampled poses, a 30-second replay, and the exported profile before using your camera.</p></div><button class="secondary-button" id="demo-camera" type="button">Try my camera in this demo</button></section>`;
 }
 
 function homePage(): string {
-  return `${demoBanner()}${header()}<main id="main">
+  return `${routeAnnouncer()}${demoBanner()}${header()}<main id="main">
     ${demoMode ? demoIntro() : landingHero()}
     ${phase === 'idle' ? setupCard() : calibrationCard()}
     ${methodSection()}${makerPackSection()}
   </main>${footer()}<div class="status-toast" id="status-toast" role="status" hidden></div><div class="offline-ribbon" id="offline-ribbon" ${navigator.onLine ? 'hidden' : ''}>Offline — calibration still works</div>`;
 }
 
-function render(): void {
+function finishRouteRender(shouldFocusRoute: boolean): void {
+  if (!shouldFocusRoute) return;
+  requestAnimationFrame(() => {
+    const heading = document.querySelector<HTMLHeadingElement>('h1');
+    if (!heading) return;
+    heading.focus({ preventScroll: true });
+    const announcer = document.querySelector<HTMLElement>('#route-status');
+    if (announcer) announcer.textContent = `${heading.textContent?.trim() ?? 'Page'} loaded.`;
+  });
+}
+
+function render(shouldFocusRoute = false): void {
   stopMonitoring();
   const route = location.pathname.replace(/\/$/, '');
   if (route === '/privacy' || route === '/terms') {
@@ -267,12 +282,14 @@ function render(): void {
     );
     app.innerHTML = legalPage(route === '/privacy' ? 'privacy' : 'terms');
     bindShared();
+    finishRouteRender(shouldFocusRoute);
     return;
   }
   if (route !== '' && route !== '/' && route !== '/demo') {
     updateMetadata('Page not found — MoveMap', 'The requested MoveMap page could not be found.', location.pathname);
     app.innerHTML = notFoundPage();
     bindShared();
+    finishRouteRender(shouldFocusRoute);
     return;
   }
   updateMetadata(
@@ -285,6 +302,7 @@ function render(): void {
   bindHome();
   if (stream && phase !== 'idle') attachStream();
   if (phase === 'ready' || phase === 'testing' || phase === 'results') startMonitoring();
+  finishRouteRender(shouldFocusRoute);
 }
 
 function bindShared(): void {
@@ -626,6 +644,10 @@ function updateOnlineState(): void {
 
 window.addEventListener('online', updateOnlineState);
 window.addEventListener('offline', updateOnlineState);
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) finishRouteRender(true);
+});
+window.addEventListener('popstate', () => finishRouteRender(true));
 window.addEventListener('beforeinstallprompt', (event) => {
   event.preventDefault();
   installPrompt = event as BeforeInstallPromptEvent;
@@ -674,7 +696,9 @@ async function boot(): Promise<void> {
   }
   render();
   license = await verifyLicense();
-  render();
+  const route = location.pathname.replace(/\/$/, '') || '/';
+  const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+  render(route !== '/' || navigation?.type === 'back_forward');
   registerServiceWorker().catch(() => undefined);
 }
 

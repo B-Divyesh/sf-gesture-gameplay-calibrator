@@ -1,0 +1,1 @@
+Test webcam gestures in your room, check false triggers, and export a JSON profile.

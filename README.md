@@ -1,10 +1,8 @@
 # MoveMap
 
 MoveMap is a local-first webcam gesture calibration notebook for game makers
-and players. It records ten lightweight visual edge signatures for each of one
-to three poses, measures live confidence, runs a 30-second false-trigger replay,
-and exports a portable JSON threshold profile. It does not inject keys, identify
-people, or upload camera frames.
+and players. It records ten examples for each pose, helps you check false
+triggers, and exports a JSON profile. MoveMap does not upload camera frames.
 
 Live: <https://gesture-gameplay-calibrator.sociobot.in>
 
@@ -12,10 +10,9 @@ Try the isolated sample: <https://gesture-gameplay-calibrator.sociobot.in/demo>
 
 ## Who it is for
 
-Use MoveMap before wiring a webcam gesture into a game. It helps answer a
-practical question: does this pose stay recognizable with the camera, lighting,
-background, clothing, and movement range in the room where it will be used?
-Choose a seated, subtle, or hand-only pose when needed.
+Use MoveMap before wiring a webcam gesture into a game. Check whether the pose
+still works with your room, camera, and lighting. Choose a seated, subtle, or
+hand-only pose when needed.
 
 ## Run locally
 
@@ -26,8 +23,8 @@ npm install
 npm run dev
 ```
 
-Open the shown local URL, allow camera access, choose up to three checkpoint
-names, and record ten examples of each. Profiles persist in IndexedDB. The PWA
+Open the shown local URL and allow camera access. Choose up to three checkpoint
+names, then record ten examples of each. Profiles persist in IndexedDB. The PWA
 works offline after its first successful load.
 
 Open `/demo` to inspect a completed three-checkpoint profile without setup.
@@ -51,34 +48,34 @@ Relied-on product claims and their exact browser commands are listed in
 `.factory/claims.json`. Run each command there from a clean install before a
 release.
 
-Playwright is pinned to 1.58.2. Its Chromium binary must be available through
-`PLAYWRIGHT_BROWSERS_PATH`, or install it with `npx playwright install chromium`.
+Playwright is pinned to 1.58.2. Set `PLAYWRIGHT_BROWSERS_PATH`, or install its
+browser with `npx playwright install chromium`.
 
 ## Billing configuration
 
 Maker Pack is a one-time $12 license unlock through the Sociobot billing API.
-It exports a JavaScript trigger helper using the calibrated hold and release settings.
-No payment provider is embedded. Production defaults to
-`https://api.sociobot.in/api/v1`; set `VITE_BILLING_BASE` at build time to use
-the pilot endpoint on staging. The product slug is used directly, with no
-hardcoded billing product ID.
-
-The production release gate also sends a 60-request invalid-license burst to
-the public Sociobot verification endpoint. At least one response must be
-`429 Too Many Requests` and every throttled response must include a positive
-`Retry-After`; run it alone with `npm run test:billing-rate-limit`.
+It exports a JavaScript trigger helper from the calibrated hold and release
+settings. The buy link opens the registered Sociobot/Dodo checkout.
 
 ## Privacy and limitations
 
-Feature extraction runs in the browser. No camera image is persisted; saved and
-exported profiles contain normalized numeric edge signatures. This intentionally
-small model is a room-specific calibration aid, not universal pose recognition.
+Camera processing runs in the browser. Saved and exported profiles contain
+numeric signatures, not photos or video. This small model is a room-specific
+calibration aid, not universal pose recognition.
 Read the in-product [privacy policy](https://gesture-gameplay-calibrator.sociobot.in/privacy/)
 and [terms](https://gesture-gameplay-calibrator.sociobot.in/terms/).
 
-The product brief is in [`.factory/brief.json`](.factory/brief.json), its visual
-system and asset provenance in [`.factory/design.md`](.factory/design.md), and
-the release verification record in [`.factory/handoff.md`](.factory/handoff.md).
+Read the product brief in [`.factory/brief.json`](.factory/brief.json).
+See the visual system and asset provenance in [`.factory/design.md`](.factory/design.md).
+See release evidence in [`.factory/handoff.md`](.factory/handoff.md).
+
+## Deploy
+
+Create `dist/` with `npm run build`. Factory operators deploy this product with:
+
+```sh
+/opt/fleet/lib/deploy-static.sh gesture-gameplay-calibrator dist
+```
 
 ## License
 
