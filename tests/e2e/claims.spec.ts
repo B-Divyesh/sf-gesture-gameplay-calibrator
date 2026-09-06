@@ -171,3 +171,21 @@ test('@claim:maker-helper-export a valid Maker Pack license exports the calibrat
   expect(source).toContain('holdMs = 450');
   expect(source).toContain('releaseAt = 0.58');
 });
+
+test('@claim:refunded-license-revocation a refunded license removes Maker Pack helper access', async ({ page }) => {
+  let verificationRequests = 0;
+  await page.route('https://api.sociobot.in/api/v1/products/gesture-gameplay-calibrator/verify?license=*', async (route) => {
+    verificationRequests += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ valid: false, reason: 'revoked', expires_at: null }),
+    });
+  });
+
+  await page.goto('/demo?license=recorded-refunded-license');
+  await expect.poll(() => verificationRequests).toBe(1);
+  await expect(page.getByText('License no longer active')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Buy Maker Pack' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Export JS trigger helper' })).toHaveCount(0);
+});

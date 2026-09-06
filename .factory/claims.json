@@ -54,5 +54,12 @@
     "where": "Maker Pack section, exported result, README",
     "test": "npm run test:e2e -- --grep @claim:maker-helper-export",
     "sandbox": "fresh /demo sample with a recorded valid Sociobot verification response; download the helper and assert its exported function and calibrated settings"
+  },
+  {
+    "id": "refunded-license-revocation",
+    "claim": "A refunded Maker Pack license loses helper access when MoveMap verifies it.",
+    "where": "terms, Maker Pack purchase",
+    "test": "npm run test:e2e -- --grep @claim:refunded-license-revocation",
+    "sandbox": "fresh /demo sample with a recorded Sociobot revoked-license response; assert the inactive notice, purchase option, and absent helper export"
   }
 ]
