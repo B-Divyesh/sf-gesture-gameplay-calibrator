@@ -92,6 +92,7 @@ test('@claim:calibration-boundaries sample proves three checkpoints, ten example
 
 test('@claim:json-export export contains numeric signatures and no image or video payload', async ({ page }) => {
   await page.goto('/demo');
+  await expect(page.getByRole('heading', { name: 'Test “Living room rhythm game”' })).toBeVisible();
   const savedProfile = await storedDemoProfile(page) as { checkpoints: Array<{ examples: unknown[][] }> };
   const profile = await downloadedJson(page) as { checkpoints: Array<{ examples: unknown[][] }> };
   for (const candidate of [savedProfile, profile]) {
